@@ -10,7 +10,9 @@ class MyDataset(torch.utils.data.Dataset):
         # get file list with glob.glob
         self.file_list = sorted(glob.glob(root + '/*.jpg'))
         # set transform with tvt.Compose
-        self.transform = tvt.Compose([tvt.ToTensor(), tvt.Normalize(mean=0.5, std=0.5)])
+        self.transform = tvt.Compose([tvt.Resize((256, 256)), tvt.ToTensor(), 
+                                        tvt.Normalize(mean=[0.5, 0.5, 0.5], 
+                                                    std=[0.5, 0.5, 0.5])])
 
     def __len__(self) -> int:
         return len(self.file_list)
