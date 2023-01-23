@@ -12,7 +12,12 @@ class MyDataset(torch.utils.data.Dataset):
         # set transform with tvt.Compose
         self.transform = tvt.Compose([tvt.Resize((256, 256)), tvt.ToTensor(), 
                                         tvt.Normalize(mean=[0.5, 0.5, 0.5], 
-                                                    std=[0.5, 0.5, 0.5])])
+                                                    std=[0.5, 0.5, 0.5])], 
+                                        tvt.GaussianBlur(3, sigma=(0.1, 2.0)),
+                                        tvt.RandomAffine(degrees=(0,90), translate=(0.1, 0.1), 
+                                                        scale=(0.8, 1.2), shear=10, resample=False, fillcolor=0),
+                                        tvt.RandomPerspective(distortion_scale=0.5, p=0.5, interpolation=3, fill=0)
+                                                         )
 
     def __len__(self) -> int:
         return len(self.file_list)
