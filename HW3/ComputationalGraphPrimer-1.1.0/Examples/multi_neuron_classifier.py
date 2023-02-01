@@ -66,8 +66,7 @@ cgp.parse_multi_layer_expressions()
 
 #cgp.display_network1()
 #cgp.display_network2()
-cgp.display_multi_neuron_network()           ## Only works for the examle network specified by the
-                                             ##  constructor options shown above
+cgp.display_multi_neuron_network()   
 
 training_data = cgp.gen_training_data()
 

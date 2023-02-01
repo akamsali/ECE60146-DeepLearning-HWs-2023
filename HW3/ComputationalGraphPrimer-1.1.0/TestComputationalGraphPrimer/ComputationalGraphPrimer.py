@@ -1,7 +1,7 @@
-__version__   = '1.0.9'
+__version__   = '1.1.0'
 __author__    = "Avinash Kak (kak@purdue.edu)"
-__date__      = '2023-January-22'   
-__url__       = 'https://engineering.purdue.edu/kak/distCGP/ComputationalGraphPrimer-1.0.9.html'
+__date__      = '2023-January-29'   
+__url__       = 'https://engineering.purdue.edu/kak/distCGP/ComputationalGraphPrimer-1.1.0.html'
 __copyright__ = "(C) 2023 Avinash Kak. Python Software Foundation."
 
 
@@ -18,6 +18,13 @@ Date: ''' + __date__ + '''
 
 @title
 CHANGE LOG:
+
+  Version 1.1.0:
+
+    The network visualization code in this version figures out the network
+    layout from the specification of the network in a user's script.
+    Previously, I had hand coded the visualization code for the specific
+    networks in the Examples directory of the distribution.
 
   Version 1.0.9:
 
@@ -684,7 +691,7 @@ BUGS:
     get past the author's spam filter.
 
 
-@tag_ack
+@title
 ACKNOWLEDGMENTS:
 
     Akshita Kamsali's help with improving the quality of the network graph
@@ -845,12 +852,16 @@ class ComputationalGraphPrimer(object):
         from 'xz'.
         '''
         self.exp_objects = []
+        self.var_to_int_labels = {}                  ## needed for DAG visualization with networkx
+        self.var_to_var_param = {}                   ## needed for DAG visualization with networkx
+        node_int_label = 0                           ## initialize int labels
         for exp in self.expressions:
             left,right = exp.split('=')
-            self.all_vars.add(left)
             self.expressions_dict[left] = right
             self.depends_on[left] = []
             parts = re.findall('([a-zA-Z]+)', right)
+            parts_in_pairs_dict = { parts[2*i+1] : parts[2*i] for i in range(len(parts)//2) }   ## for DAG visualiztion
+            self.var_to_var_param[left] = parts_in_pairs_dict                                   ## for DAG visualization
             right_vars = []
             right_params = []
             for part in parts:
@@ -858,12 +869,16 @@ class ComputationalGraphPrimer(object):
                     self.all_vars.add(part)
                     self.depends_on[left].append(part)
                     right_vars.append(part)
+                    self.var_to_int_labels[part] = node_int_label
+                    node_int_label += 1
                 else:
                     if self.one_neuron_model is True:
                         self.learnable_params.append(part)
                     else:
                         self.learnable_params.add(part)
                     right_params.append(part)
+            self.var_to_int_labels[left] = node_int_label
+            self.all_vars.add(left)
             exp_obj = Exp(exp, right, left, right_vars, right_params)
             self.exp_objects.append(exp_obj)
         if self.debug:
@@ -871,6 +886,8 @@ class ComputationalGraphPrimer(object):
             print("\n\nlearnable params: %s" % str(self.learnable_params))
             print("\n\ndependencies: %s" % str(self.depends_on))
             print("\n\nexpressions dict: %s" % str(self.expressions_dict))
+            print("\n\nvar_to_var_param dict: ", self.var_to_var_param)
+            print("\n\nnode to int labels: ", self.var_to_int_labels)
         for var in self.all_vars:
             if var not in self.depends_on:              # that is, var is not a key in the depends_on dict
                 if self.one_neuron_model is True:
@@ -898,6 +915,9 @@ class ComputationalGraphPrimer(object):
         of the network, and the learnable parameters remain the same as in the previous function.
         '''
         self.exp_objects = []
+        self.var_to_int_labels = {}                  ## needed for DAG visualization with networkx
+        self.var_to_var_param = {}                   ## needed for DAG visualization with networkx
+        node_int_label = 0                           ## initialize int labels
         self.layer_expressions = { i : [] for i in range(1,self.num_layers) }
         self.layer_exp_objects = { i : [] for i in range(1,self.num_layers) }
         ## A deque is a double-ended queue in which elements can inserted and deleted at both ends.
@@ -911,10 +931,11 @@ class ComputationalGraphPrimer(object):
         for layer_index in range(1,self.num_layers):
             for exp in self.layer_expressions[layer_index]:
                 left,right = exp.split('=')
-                self.all_vars.add(left)
                 self.expressions_dict[left] = right
                 self.depends_on[left] = []
                 parts = re.findall('([a-zA-Z]+)', right)
+                parts_in_pairs_dict = { parts[2*i+1] : parts[2*i] for i in range(len(parts)//2) }
+                self.var_to_var_param[left] = parts_in_pairs_dict            
                 right_vars = []
                 right_params = []
                 for part in parts:
@@ -922,6 +943,10 @@ class ComputationalGraphPrimer(object):
                         self.all_vars.add(part)
                         self.depends_on[left].append(part)
                         right_vars.append(part)
+
+                        if part not in self.var_to_int_labels:
+                            self.var_to_int_labels[part] = node_int_label
+                            node_int_label += 1
                     else:
                         if (self.one_neuron_model is True) or (self.num_layers is not None):
                             self.learnable_params.append(part)
@@ -931,16 +956,18 @@ class ComputationalGraphPrimer(object):
                 self.layer_vars[layer_index-1] = right_vars
                 self.layer_vars[layer_index].append(left)
                 self.layer_params[layer_index].append(right_params)
+                self.var_to_int_labels[left] = node_int_label
+                node_int_label += 1
+                self.all_vars.add(left)
                 exp_obj = Exp(exp, right, left, right_vars, right_params)
-                ##  when num_layers is defined and >0, the sequence of expression in 
-                ##  self.exp_objects would correspond to layers
                 self.layer_exp_objects[layer_index].append(exp_obj)
             if self.debug:
                 print("\n\nall variables: %s" % str(self.all_vars))
                 print("\n\nlearnable params: %s" % str(self.learnable_params))
                 print("\n\ndependencies: %s" % str(self.depends_on))
                 print("\n\nexpressions dict: %s" % str(self.expressions_dict))
-
+                print("\n\nvar_to_var_param dict: ", self.var_to_var_param)
+                print("\n\nnode to int labels: ", self.var_to_int_labels)
             for var in self.all_vars:
                 if var not in self.depends_on:              # that is, var is not a key in the depends_on dict
                     if (self.one_neuron_model is True) or (self.num_layers is not None):
@@ -961,11 +988,81 @@ class ComputationalGraphPrimer(object):
         print("\n\nself.layer_vars: ", self.layer_vars)
         print("\n\nself.layer_params: ", self.layer_params)
         print("\n\nself.layer_exp_objects: ", self.layer_exp_objects)
+        print("\n\n[FINAL] var_to_var_param dict: ", self.var_to_var_param)
+        print("\n\n[FINAL] node to int labels: ", self.var_to_int_labels)
+
+
+    def parse_general_dag_expressions(self):
+        ''' 
+        This method is a modification of the previous expression parser and meant specifically
+        for the case when a given set of expressions are supposed to define a general DAG. The
+        naming conventions for the variables, which designate  the nodes in the layers
+        of the network, and the learnable parameters remain the same as in the previous function.
+        '''
+        self.exp_objects = []
+        self.var_to_int_labels = {}                  ## needed for DAG visualization with networkx
+        self.var_to_var_param = {}                   ## needed for DAG visualization with networkx
+        node_int_label = 0                           ## initialize int labels
+        for exp in self.expressions:
+            left,right = exp.split('=')
+            self.expressions_dict[left] = right
+            self.depends_on[left] = []
+            parts = re.findall('([a-zA-Z]+)', right)
+            parts_in_pairs_dict = { parts[2*i+1] : parts[2*i] for i in range(len(parts)//2) }   ## for DAG visualiztion
+            self.var_to_var_param[left] = parts_in_pairs_dict                                   ## for DAG visualization
+            right_vars = []
+            right_params = []
+            for part in parts:
+                if part.startswith('x'):
+                    self.all_vars.add(part)
+                    self.depends_on[left].append(part)
+                    right_vars.append(part)
+                    if part not in self.var_to_int_labels:
+                        self.var_to_int_labels[part] = node_int_label
+                        node_int_label += 1
+                else:
+                    if self.one_neuron_model is True:
+                        self.learnable_params.append(part)
+                    else:
+                        self.learnable_params.add(part)
+                    right_params.append(part)
+            self.var_to_int_labels[left] = node_int_label
+            self.all_vars.add(left)
+            node_int_label += 1
+            self.all_vars.add(left)
+            exp_obj = Exp(exp, right, left, right_vars, right_params)
+            self.exp_objects.append(exp_obj)
+        if self.debug:
+            print("\n\nall variables: %s" % str(self.all_vars))
+            print("\n\nlearnable params: %s" % str(self.learnable_params))
+            print("\n\ndependencies: %s" % str(self.depends_on))
+            print("\n\nexpressions dict: %s" % str(self.expressions_dict))
+            print("\n\nvar_to_var_param dict: ", self.var_to_var_param)
+            print("\n\nnode to int labels: ", self.var_to_int_labels)
+        for var in self.all_vars:
+            if var not in self.depends_on:              # that is, var is not a key in the depends_on dict
+                if self.one_neuron_model is True:
+                    self.independent_vars.append(var)                
+                else:
+                    self.independent_vars.add(var)
+        self.input_size = len(self.independent_vars)
+        if self.debug:
+            print("\n\nindependent vars: %s" % str(self.independent_vars))
+        self.dependent_vars = [var for var in self.all_vars if var not in self.independent_vars]
+        self.output_size = len(self.dependent_vars)
+        self.leads_to = {var : set() for var in self.all_vars}
+        for k,v in self.depends_on.items():
+            for var in v:
+                self.leads_to[var].add(k)    
+        if self.debug:
+            print("\n\nleads_to dictionary: %s" % str(self.leads_to))
+
 
 
     def display_DAG(self):
         """
-        The code in this function will ONLY work for the DAG defined in the script 
+        The network visualization code in this script should work for any general DAG defined in 
+        an instance of CGP.  For an example, see the script
          
                             graph_based_dataflow.py
 
@@ -973,19 +1070,21 @@ class ComputationalGraphPrimer(object):
         """
         node_vars = range(5)
         labels = {}
-        labels[0]  =  r"$xa$"
-        
-        labels[1]  =  r"$xx$"
-        labels[2]  =  r"$xy$"
-        labels[3]  =  r"$xz$"
-        labels[4]  =  r"$xw$"
-        
-        edges = [(0,1), (0,2), (1,2), (1,3), (1,4), (2,3), (3,4)]
+        for var in self.all_vars:
+            labels[ self.var_to_int_labels[var] ] = r"$%s$" % var        
+        edges = []
+        for source_var in self.leads_to:
+            dest_vars = self.leads_to[source_var]
+            for dest_var in dest_vars:
+                edges.append( (self.var_to_int_labels[source_var], self.var_to_int_labels[ dest_var ] ) )
         edge_labels = {}
-        edge_labels[(1,2)]  = r"$bc$"
-        edge_labels[(1,3)]  = r"$cd$"
-        edge_labels[(4,1)]  = r"$ac$"
-        
+        output_vars = list(self.var_to_var_param.keys())
+        for out_var in output_vars:
+            out_node = self.var_to_int_labels[out_var]
+            var_param_pairs = self.var_to_var_param[out_var]
+            for i in range(len(var_param_pairs)):
+                source_var = list(var_param_pairs.keys())[i]
+                edge_labels[ ( self.var_to_int_labels[source_var], out_node ) ] = r"$%s$" % var_param_pairs[source_var]
         G = nx.DiGraph()
         G.add_nodes_from(node_vars)
         G.add_edges_from(edges)
@@ -1001,14 +1100,13 @@ class ComputationalGraphPrimer(object):
 
     def display_one_neuron_network(self):
         """
-        The code in this function will ONLY work for the DAG defined in the script 
-         
+        In version 1.1.0, I generalized this code to work on any one-neuron network as defined in the
+        example:
                        one_neuron_classifier.py
 
         in the Examples directory of the module.  
         """
         subset_sizes = [4, 1]
-
         subset_color = [
             "gold",
             "violet",
@@ -1019,21 +1117,24 @@ class ComputationalGraphPrimer(object):
             "limegreen",
             "darkorange",
         ]
-        
+        output_vars = self.dependent_vars
+        input_vars = self.independent_vars
+        num_output_vars = len(output_vars)
+        num_input_vars =  len(input_vars)
+        if num_output_vars > 1:
+            sys.exit("\n\nAborted.  For the one-neuron case, you are only allowed one output var.  \
+                                                                   You have %d output vars" % num_output_vars)
         ##  Declare the node labels using the index values mentioned above
         labels = {}
-        labels[0]  =  r"$xw$"
-        labels[1]  =  r"$xa$"
-        labels[2]  =  r"$xb$"
-        labels[3]  =  r"$xc$"
-        labels[4]  =  r"$xd$"
-        
+        for var in self.all_vars:
+            labels[ self.var_to_int_labels[var] ] = r"$%s$" % var        
         ##  Declare the edge labels --- again using the node index values mentioned previously
         edge_labels = {}
-        edge_labels[(0,4)]  = r"$ab$"
-        edge_labels[(1,4)]  = r"$bc$"
-        edge_labels[(2,4)]  = r"$cd$"
-        edge_labels[(3,4)]  = r"$ac$"
+        out_node = self.var_to_int_labels[ output_vars[0] ]
+        var_param_pairs = self.var_to_var_param[output_vars[0] ]
+        for i in range(len(var_param_pairs)):
+            source_var = list(var_param_pairs.keys())[i]
+            edge_labels[ ( self.var_to_int_labels[source_var], out_node ) ] = r"$%s$" % var_param_pairs[source_var]
         
         def multilayered_graph(*subset_sizes):
             '''
@@ -1062,15 +1163,15 @@ class ComputationalGraphPrimer(object):
 
     def display_multi_neuron_network(self):
         """
-        The code in this function will ONLY work for the DAG defined in the script 
+        In version 1.1.0, I made this network visualization more general and (if it has no bugs) it should
+        work with any multi-layer network graph, such as the one shown in
          
                        multi_neuron_classifier.py
 
         in the Examples directory of the module.  
         """
-        ##  This implies that we need a total of 7 nodes, in 3 different layers, with the nodes indexed from 0 to 6;
-        subset_sizes = [4, 2, 1]
-        
+        ##  This tells us how many nodes in each layer and what the integer indexing for the nodes should be
+        subset_sizes = self.layers_config
         subset_color = [
             "gold",
             "violet",
@@ -1081,28 +1182,20 @@ class ComputationalGraphPrimer(object):
             "limegreen",
             "darkorange",
         ]
-        ##  Declare the node labels using the index values mentioned above
+        ##  Declare the node labels using the integer index values for the nodes
         labels = {}
-        labels[0]  =  r"$xp$"
-        labels[1]  =  r"$xq$"
-        labels[2]  =  r"$xr$"
-        labels[3]  =  r"$xs$"
-        labels[4]  =  r"$xz$"
-        labels[5]  =  r"$xw$"
-        labels[6]  =  r"$x0$"
-        
+        for var in self.all_vars:
+            labels[ self.var_to_int_labels[var] ] = r"$%s$" % var        
+        ##  Declare the edge labels using the integer index values for the nodes:
         edge_labels = {}
-        edge_labels[(0,4)]  = r"$bp$"
-        edge_labels[(1,4)]  = r"$bq$"
-        edge_labels[(2,4)]  = r"$br$"
-        edge_labels[(3,4)]  = r"$bs$"
-        edge_labels[(0,5)]  = r"$ap$"
-        edge_labels[(1,5)]  = r"$aq$"
-        edge_labels[(2,5)]  = r"$ar$"
-        edge_labels[(3,5)]  = r"$as$"
-        edge_labels[(4,6)]  = r"$cq$"
-        edge_labels[(5,6)]  = r"$cp$"
-        
+        output_vars = list(self.var_to_var_param.keys())
+        for out_var in output_vars:
+            out_node = self.var_to_int_labels[out_var]
+            var_param_pairs = self.var_to_var_param[out_var]
+            for i in range(len(var_param_pairs)):
+                source_var = list(var_param_pairs.keys())[i]
+                edge_labels[ ( self.var_to_int_labels[source_var], out_node ) ] = r"$%s$" % var_param_pairs[source_var]
+
         def multilayered_graph(*subset_sizes):
             '''
             Defines a multi-partite graph you need for a neural network
@@ -1115,7 +1208,7 @@ class ComputationalGraphPrimer(object):
             for layer1, layer2 in nx.utils.pairwise(layers):
                 G.add_edges_from(itertools.product(layer1, layer2))
             return G
-        
+
         G = multilayered_graph(*subset_sizes)
         color = [subset_color[data["layer"]] for v, data in G.nodes(data=True)]
         pos = nx.multipartite_layout(G, subset_key="layer")
@@ -1195,7 +1288,7 @@ class ComputationalGraphPrimer(object):
             def __init__(self, training_data, batch_size):
                 self.training_data = training_data
                 self.batch_size = batch_size
-                self.class_0_samples = [(item, 0) for item in self.training_data[0]]   ## Associate label 0 with ecah sample
+                self.class_0_samples = [(item, 0) for item in self.training_data[0]]   ## Associate label 0 with each sample
                 self.class_1_samples = [(item, 1) for item in self.training_data[1]]   ## Associate label 1 with each sample
 
             def __len__(self):
@@ -1226,7 +1319,7 @@ class ComputationalGraphPrimer(object):
         data_loader = DataLoader(training_data, batch_size=self.batch_size)
         loss_running_record = []
         i = 0
-        avg_loss_over_literations = 0.0                                    ##  Average the loss over iterations for printing out 
+        avg_loss_over_iterations = 0.0                                    ##  Average the loss over iterations for printing out 
                                                                            ##    every N iterations during the training loop.
         for i in range(self.training_iterations):
             data = data_loader.getbatch()
@@ -1235,12 +1328,12 @@ class ComputationalGraphPrimer(object):
             y_preds, deriv_sigmoids =  self.forward_prop_one_neuron_model(data_tuples)              ##  FORWARD PROP of data
             loss = sum([(abs(class_labels[i] - y_preds[i]))**2 for i in range(len(class_labels))])  ##  Find loss
             loss_avg = loss / float(len(class_labels))                                              ##  Average the loss over batch
-            avg_loss_over_literations += loss_avg                          
+            avg_loss_over_iterations += loss_avg                          
             if i%(self.display_loss_how_often) == 0: 
-                avg_loss_over_literations /= self.display_loss_how_often
-                loss_running_record.append(avg_loss_over_literations)
-                print("[iter=%d]  loss = %.4f" %  (i+1, avg_loss_over_literations))                 ## Display average loss
-                avg_loss_over_literations = 0.0                                                     ## Re-initialize avg loss
+                avg_loss_over_iterations /= self.display_loss_how_often
+                loss_running_record.append(avg_loss_over_iterations)
+                print("[iter=%d]  loss = %.4f" %  (i+1, avg_loss_over_iterations))                 ## Display average loss
+                avg_loss_over_iterations = 0.0                                                     ## Re-initialize avg loss
             y_errors = list(map(operator.sub, class_labels, y_preds))
             y_error_avg = sum(y_errors) / float(len(class_labels))
             deriv_sigmoid_avg = sum(deriv_sigmoids) / float(len(class_labels))
@@ -1287,7 +1380,7 @@ class ComputationalGraphPrimer(object):
             output_vals.append(output_val)                         ## Collect output values for different input samples in batch
 
             deriv_sigmoids.append(deriv_sigmoid)                   ## Collect the Sigmoid derivatives for each input sample in batch
-                                                                   ##   The derivates that are saved during forward prop are shown on Slide 59.
+                                                                   ##   The derivatives that are saved during forward prop are shown on Slide 59.
         return output_vals, deriv_sigmoids
 
 
@@ -1341,8 +1434,8 @@ class ComputationalGraphPrimer(object):
             def __init__(self, training_data, batch_size):
                 self.training_data = training_data
                 self.batch_size = batch_size
-                self.class_0_samples = [(item, 0) for item in self.training_data[0]]    ## Associate label 0 with ecah sample
-                self.class_1_samples = [(item, 1) for item in self.training_data[1]]    ## Associate label 1 with ecah sample
+                self.class_0_samples = [(item, 0) for item in self.training_data[0]]    ## Associate label 0 with each sample
+                self.class_1_samples = [(item, 1) for item in self.training_data[1]]    ## Associate label 1 with each sample
 
             def __len__(self):
                 return len(self.training_data[0]) + len(self.training_data[1])
@@ -1384,7 +1477,7 @@ class ComputationalGraphPrimer(object):
         data_loader = DataLoader(training_data, batch_size=self.batch_size)
         loss_running_record = []
         i = 0
-        avg_loss_over_literations = 0.0                                          ##  Average the loss over iterations for printing out 
+        avg_loss_over_iterations = 0.0                                          ##  Average the loss over iterations for printing out 
                                                                                  ##    every N iterations during the training loop.   
         for i in range(self.training_iterations):
             data = data_loader.getbatch()
@@ -1395,12 +1488,12 @@ class ComputationalGraphPrimer(object):
             y_preds =  [item for sublist in  predicted_labels_for_batch  for item in sublist]  ## Get numeric vals for predictions
             loss = sum([(abs(class_labels[i] - y_preds[i]))**2 for i in range(len(class_labels))])  ## Calculate loss for batch
             loss_avg = loss / float(len(class_labels))                                         ## Average the loss over batch
-            avg_loss_over_literations += loss_avg                                              ## Add to Average loss over iterations
+            avg_loss_over_iterations += loss_avg                                              ## Add to Average loss over iterations
             if i%(self.display_loss_how_often) == 0: 
-                avg_loss_over_literations /= self.display_loss_how_often
-                loss_running_record.append(avg_loss_over_literations)
-                print("[iter=%d]  loss = %.4f" %  (i+1, avg_loss_over_literations))            ## Display avg loss
-                avg_loss_over_literations = 0.0                                                ## Re-initialize avg-over-iterations loss
+                avg_loss_over_iterations /= self.display_loss_how_often
+                loss_running_record.append(avg_loss_over_iterations)
+                print("[iter=%d]  loss = %.4f" %  (i+1, avg_loss_over_iterations))            ## Display avg loss
+                avg_loss_over_iterations = 0.0                                                ## Re-initialize avg-over-iterations loss
             y_errors = list(map(operator.sub, class_labels, y_preds))
             y_error_avg = sum(y_errors) / float(len(class_labels))
             self.backprop_and_update_params_multi_neuron_model(y_error_avg, class_labels)      ## BACKPROP loss
@@ -1539,7 +1632,7 @@ class ComputationalGraphPrimer(object):
             for j,var in enumerate(vars_in_layer):
                 layer_params = self.layer_params[back_layer_index][j]
                 ##  Regarding the parameter update loop that follows, see the Slides 74 through 77 of my Week 3 
-                ##  lecture slides for how the parameters are updated using the patial derivatives stored away 
+                ##  lecture slides for how the parameters are updated using the partial derivatives stored away 
                 ##  during forward propagation of data. The theory underlying these calculations is presented 
                 ##  in Slides 68 through 71. 
                 for i,param in enumerate(layer_params):
@@ -1603,8 +1696,8 @@ class ComputationalGraphPrimer(object):
             def __init__(self, training_data, batch_size):
                 self.training_data = training_data
                 self.batch_size = batch_size
-                self.class_0_samples = [(item, 0) for item in self.training_data[0]]         ## Associate label 0 with ecah sample
-                self.class_1_samples = [(item, 1) for item in self.training_data[1]]         ## Associate label 1 with ecah sample
+                self.class_0_samples = [(item, 0) for item in self.training_data[0]]         ## Associate label 0 with each sample
+                self.class_1_samples = [(item, 1) for item in self.training_data[1]]         ## Associate label 1 with each sample
 
             def __len__(self):
                 return len(self.training_data[0]) + len(self.training_data[1])
@@ -1663,7 +1756,7 @@ class ComputationalGraphPrimer(object):
 
         loss_running_record = []
         i = 0
-        avg_loss_over_literations = 0.0
+        avg_loss_over_iterations = 0.0
         if option == 'one_neuron':
             N,D_in,D_out = self.batch_size,self.input_size,self.output_size
             model = OneNeuronNet(D_in,D_out)
@@ -1685,12 +1778,12 @@ class ComputationalGraphPrimer(object):
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
-            avg_loss_over_literations += loss.item()
+            avg_loss_over_iterations += loss.item()
             if i%(self.display_loss_how_often) == 0: 
-                avg_loss_over_literations /= self.display_loss_how_often
-                loss_running_record.append(avg_loss_over_literations)
-                print("[iter=%d]  loss = %.4f" %  (i+1, avg_loss_over_literations))
-                avg_loss_over_literations = 0.0
+                avg_loss_over_iterations /= self.display_loss_how_often
+                loss_running_record.append(avg_loss_over_iterations)
+                print("[iter=%d]  loss = %.4f" %  (i+1, avg_loss_over_iterations))
+                avg_loss_over_iterations = 0.0
         plt.figure()     
         plt.plot(loss_running_record) 
         plt.show()   

@@ -30,7 +30,9 @@ cgp = ComputationalGraphPrimer(
                grad_delta = 1e-4,
       )
 
-cgp.parse_expressions()
+#cgp.parse_expressions()
+
+cgp.parse_general_dag_expressions()
 
 #cgp.display_network1()
 #cgp.display_network2()

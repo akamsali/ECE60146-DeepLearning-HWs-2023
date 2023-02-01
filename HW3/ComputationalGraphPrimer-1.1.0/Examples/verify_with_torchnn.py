@@ -41,8 +41,8 @@ from ComputationalGraphPrimer import *
 cgp = ComputationalGraphPrimer(
                expressions = ['xw=ab*xa+bc*xb+cd*xc+ac*xd'],   # Only used to determine the data dimensionality
                dataset_size = 5000,
-              #  learning_rate = 1e-6,              # For the multi-neuron option below
-              learning_rate = 1e-3,             # For the one-neuron option below
+               learning_rate = 1e-6,              # For the multi-neuron option below
+#               learning_rate = 1e-3,             # For the one-neuron option below
 #               learning_rate = 5 * 1e-2,         # Also for the one-neuron option below
                training_iterations = 40000,
                batch_size = 8,
@@ -55,7 +55,7 @@ cgp.parse_expressions()
 
 training_data = cgp.gen_training_data()
 
-cgp.run_training_with_torchnn('one_neuron', training_data)                  ## (A)
+#cgp.run_training_with_torchnn('one_neuron', training_data)                  ## (A)
 
-# cgp.run_training_with_torchnn('multi_neuron', training_data)                 ## (B)
+cgp.run_training_with_torchnn('multi_neuron', training_data)                 ## (B)
 
