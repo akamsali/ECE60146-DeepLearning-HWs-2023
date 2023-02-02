@@ -5,8 +5,9 @@ import unittest
 class TestInstanceCreation(unittest.TestCase):
 
     def setUp(self):
-        self.cgp = ComputationalGraphPrimer.ComputationalGraphPrimer(expressions = ['xy=ab*xa'],
-                                                   dataset_size= 10,
+        self.cgp = ComputationalGraphPrimer.ComputationalGraphPrimer(one_neuron_model=True,  
+                                                                     expressions = ['xy=ab*xa'],
+                                                                     dataset_size= 10,
                                                   )
 
     def test_instance_creation(self):

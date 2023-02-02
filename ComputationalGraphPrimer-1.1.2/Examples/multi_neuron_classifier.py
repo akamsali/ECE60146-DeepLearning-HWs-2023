@@ -3,7 +3,7 @@
 ##  multi_neuron_classifier.py
 
 """
-The main point of this script is to demonstrate saving the information during the
+The main point of this script is to demonstrate saving the partial derivatives during the
 forward propagation of data through a neural network and using that information for
 backpropagating the loss and for updating the values for the learnable parameters.  The
 script uses the following 4-2-1 network layout, with 4 nodes in the input layer, 2 in

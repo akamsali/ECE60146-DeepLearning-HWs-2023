@@ -39,6 +39,7 @@ os.environ['PYTHONHASHSEED'] = str(seed)
 from ComputationalGraphPrimer import *
 
 cgp = ComputationalGraphPrimer(
+               for_verification_only = True,
                expressions = ['xw=ab*xa+bc*xb+cd*xc+ac*xd'],   # Only used to determine the data dimensionality
                dataset_size = 5000,
                learning_rate = 1e-6,              # For the multi-neuron option below
@@ -53,9 +54,10 @@ cgp = ComputationalGraphPrimer(
 ##  This call is needed for generating the training data:
 cgp.parse_expressions()                               
 
+
 training_data = cgp.gen_training_data()
 
-#cgp.run_training_with_torchnn('one_neuron', training_data)                  ## (A)
+#cgp.run_training_with_torchnn('one_neuron', training_data)             ## (A)   REMEMBER to also change learning_rate above
 
-cgp.run_training_with_torchnn('multi_neuron', training_data)                 ## (B)
+cgp.run_training_with_torchnn('multi_neuron', training_data)            ## (B)   REMEMBER to also change learning_rate above
 

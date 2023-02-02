@@ -6,19 +6,19 @@ from setuptools import setup, find_packages
 import sys, os
 
 setup(name='ComputationalGraphPrimer',
-      version='1.1.0',
+      version='1.1.2',
       author='Avinash Kak',
       author_email='kak@purdue.edu',
       maintainer='Avinash Kak',
       maintainer_email='kak@purdue.edu',
-      url='https://engineering.purdue.edu/kak/distCGP/ComputationalGraphPrimer-1.1.0.html',
-      download_url='https://engineering.purdue.edu/kak/distCGP/ComputationalGraphPrimer-1.1.0.tar.gz',
+      url='https://engineering.purdue.edu/kak/distCGP/ComputationalGraphPrimer-1.1.2.html',
+      download_url='https://engineering.purdue.edu/kak/distCGP/ComputationalGraphPrimer-1.1.2.tar.gz',
       description='An educational module meant to serve as a prelude to talking about automatic differentiation in deep learning frameworks (for example, as provided by the Autograd module in PyTorch)',
       long_description='''
 
 Consult the module API page at
 
-      https://engineering.purdue.edu/kak/distCGP/ComputationalGraphPrimer-1.1.0.html
+      https://engineering.purdue.edu/kak/distCGP/ComputationalGraphPrimer-1.1.2.html
 
 for all information related to this module, including information related
 to the latest changes to the code.  

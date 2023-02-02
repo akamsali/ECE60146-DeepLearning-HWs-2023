@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <title>
-ComputationalGraphPrimer-1.1.0.html
+ComputationalGraphPrimer-1.1.2.html
 </title>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 </head>
@@ -10,18 +10,18 @@ ComputationalGraphPrimer-1.1.0.html
 <table width="100%" cellspacing="0" cellpadding="2" border="0" summary="heading">
 <tr bgcolor="#7799ee">
 <td valign=bottom>&nbsp;<br>
-<font color="#ffffff" face="helvetica, arial">&nbsp;<br><big><big><strong>ComputationalGraphPrimer</strong></big></big> (version 1.1.0, 2023-January-29)</font></td
+<font color="#ffffff" face="helvetica, arial">&nbsp;<br><big><big><strong>ComputationalGraphPrimer</strong></big></big> (version 1.1.2, 2023-February-2)</font></td
 ><td align=right valign=bottom
 ><font color="#ffffff" face="helvetica, arial">
 </font></td></tr></table>
 <p><a href="#ComputationalGraphPrimer"><tt>ComputationalGraphPrimer</tt></a>.py<br>
 <tt>
 &nbsp;<br>
-Version:&nbsp;1.1.0<br>
+Version:&nbsp;1.1.2<br>
 &nbsp;&nbsp;&nbsp;<br>
 Author:&nbsp;Avinash&nbsp;Kak&nbsp;(kak@purdue.edu)<br>
 &nbsp;<br>
-Date:&nbsp;2023-January-29<br>
+Date:&nbsp;2023-February-2<br>
 &nbsp;<br>
 &nbsp;<br>
 </tt>
@@ -29,8 +29,8 @@ Date:&nbsp;2023-January-29<br>
 <TR>
 <TH ALIGN=left>
 <tt>
-<b>Download Version 1.1.0:</b>&nbsp;  
-<a HREF="https://engineering.purdue.edu/kak/distCGP/ComputationalGraphPrimer-1.1.0.tar.gz?download">gztar</a> 
+<b>Download Version 1.1.2:</b>&nbsp;  
+<a HREF="https://engineering.purdue.edu/kak/distCGP/ComputationalGraphPrimer-1.1.2.tar.gz?download">gztar</a> 
 &nbsp;             
 <br>
 <br>
@@ -72,7 +72,7 @@ Last updated:
 </TABLE>
 <br>
 <tt>
-<a HREF="ComputationalGraphPrimer-1.1.0_CodeOnly.html">View the main module code file in your browser</a> 
+<a HREF="ComputationalGraphPrimer-1.1.2_CodeOnly.html">View the main module code file in your browser</a> 
 &nbsp;<br>
 &nbsp;<br>
 &nbsp;<br>
@@ -80,6 +80,21 @@ Last updated:
 </font>
 <br>
 
+&nbsp;&nbsp;Version&nbsp;1.1.2:<br>
+&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;Fixes&nbsp;a&nbsp;couple&nbsp;of&nbsp;additional&nbsp;bugs,&nbsp;one&nbsp;dealing&nbsp;with&nbsp;the&nbsp;misalignment&nbsp;of<br>
+&nbsp;&nbsp;&nbsp;&nbsp;variables&nbsp;and&nbsp;parameters&nbsp;in&nbsp;the&nbsp;backpropagation&nbsp;logic&nbsp;for&nbsp;the&nbsp;one-neuron<br>
+&nbsp;&nbsp;&nbsp;&nbsp;case,&nbsp;and&nbsp;the&nbsp;other&nbsp;with&nbsp;the&nbsp;example&nbsp;script&nbsp;"verify_with_torchnn.py"&nbsp;not<br>
+&nbsp;&nbsp;&nbsp;&nbsp;working&nbsp;on&nbsp;account&nbsp;of&nbsp;the&nbsp;previous&nbsp;changes&nbsp;to&nbsp;the&nbsp;module&nbsp;code.&nbsp;&nbsp;Thanks&nbsp;to<br>
+&nbsp;&nbsp;&nbsp;&nbsp;all&nbsp;who&nbsp;discovered&nbsp;these&nbsp;bugs.<br>
+&nbsp;<br>
+&nbsp;&nbsp;Version&nbsp;1.1.1:<br>
+&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;Includes&nbsp;a&nbsp;bug&nbsp;fix&nbsp;in&nbsp;the&nbsp;parser&nbsp;for&nbsp;the&nbsp;expressions&nbsp;that&nbsp;define&nbsp;a<br>
+&nbsp;&nbsp;&nbsp;&nbsp;multi-layer&nbsp;neural&nbsp;network.&nbsp;&nbsp;The&nbsp;bug&nbsp;was&nbsp;causing&nbsp;the&nbsp;input&nbsp;nodes&nbsp;to&nbsp;be<br>
+&nbsp;&nbsp;&nbsp;&nbsp;replicated&nbsp;when&nbsp;parsing&nbsp;the&nbsp;expressions&nbsp;at&nbsp;each&nbsp;node&nbsp;in&nbsp;the&nbsp;second&nbsp;layer&nbsp;of<br>
+&nbsp;&nbsp;&nbsp;&nbsp;such&nbsp;a&nbsp;network.&nbsp;&nbsp;Many&nbsp;thanks&nbsp;to&nbsp;the&nbsp;student&nbsp;who&nbsp;discovered&nbsp;the&nbsp;bug.<br>
+&nbsp;<br>
 &nbsp;&nbsp;Version&nbsp;1.1.0:<br>
 &nbsp;<br>
 &nbsp;&nbsp;&nbsp;&nbsp;The&nbsp;network&nbsp;visualization&nbsp;code&nbsp;in&nbsp;this&nbsp;version&nbsp;figures&nbsp;out&nbsp;the&nbsp;network<br>
@@ -202,7 +217,6 @@ Last updated:
 &nbsp;&nbsp;&nbsp;&nbsp;variables&nbsp;---&nbsp;'xx',&nbsp;'xa',&nbsp;'xy',&nbsp;'xz',&nbsp;and&nbsp;'xw'&nbsp;---&nbsp;and&nbsp;four&nbsp;learnable<br>
 &nbsp;&nbsp;&nbsp;&nbsp;parameters:&nbsp;'ab',&nbsp;'ac',&nbsp;'bc',&nbsp;and&nbsp;'cd'.&nbsp;&nbsp;The&nbsp;DAG&nbsp;that&nbsp;is&nbsp;generated&nbsp;by&nbsp;these<br>
 &nbsp;&nbsp;&nbsp;&nbsp;expressions&nbsp;looks&nbsp;like:<br>
-&nbsp;<br>
 &nbsp;<br>
 
 
@@ -778,7 +792,7 @@ Last updated:
 <table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
 <tr bgcolor="#aa55cc">
 <td colspan=3 valign=bottom>&nbsp;<br>
-<font color="#ffffff" face="helvetica, arial"><big><strong>Imported Modules</strong></big></font></td></tr>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Modules</strong></big></font></td></tr>
     
 <tr><td bgcolor="#aa55cc"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
 <td width="100%"><table width="100%" summary="list"><tr><td width="25%" valign=top><a href="copy.html">copy</a><br>
@@ -1094,13 +1108,12 @@ Data descriptors defined here:<br>
 <table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
 <tr bgcolor="#55aa55">
 <td colspan=3 valign=bottom>&nbsp;<br>
-
 <tr><td bgcolor="#55aa55"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
 <td width="100%"><strong>__author__</strong> = 'Avinash Kak (kak@purdue.edu)'<br>
 <strong>__copyright__</strong> = '(C) 2023 Avinash Kak. Python Software Foundation.'<br>
-<strong>__date__</strong> = '2023-January-29'<br>
-<strong>__url__</strong> = 'https://engineering.purdue.edu/kak/distCGP/ComputationalGraphPrimer-1.1.0.html'<br>
-<strong>__version__</strong> = '1.1.0'</td></tr></table>
+<strong>__date__</strong> = '2023-February-2'<br>
+<strong>__url__</strong> = 'https://engineering.purdue.edu/kak/distCGP/ComputationalGraphPrimer-1.1.2.html'<br>
+<strong>__version__</strong> = '1.1.2'</td></tr></table>
 <table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
 <tr bgcolor="#7799ee">
 <td colspan=3 valign=bottom>&nbsp;<br>
@@ -1108,3 +1121,4 @@ Data descriptors defined here:<br>
 <tr><td bgcolor="#7799ee"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
 <td width="100%">Avinash&nbsp;Kak&nbsp;(kak@purdue.edu)</td></tr></table>
 </body></html>
+

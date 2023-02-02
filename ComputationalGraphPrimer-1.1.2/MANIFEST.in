@@ -4,7 +4,7 @@ include ComputationalGraphPrimer/__init__.py
 include setup.py
 include Makefile
 include README
-include ComputationalGraphPrimer-1.1.0.html
+include ComputationalGraphPrimer-1.1.2.html
 include TestComputationalGraphPrimer/ComputationalGraphPrimer.py
 include TestComputationalGraphPrimer/TestInstanceCreation.py
 include TestComputationalGraphPrimer/Test.py

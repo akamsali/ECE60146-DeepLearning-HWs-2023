@@ -1,7 +1,7 @@
-__version__   = '1.1.0'
+__version__   = '1.1.2'
 __author__    = "Avinash Kak (kak@purdue.edu)"
-__date__      = '2023-January-29'   
-__url__       = 'https://engineering.purdue.edu/kak/distCGP/ComputationalGraphPrimer-1.1.0.html'
+__date__      = '2023-February-2'   
+__url__       = 'https://engineering.purdue.edu/kak/distCGP/ComputationalGraphPrimer-1.1.2.html'
 __copyright__ = "(C) 2023 Avinash Kak. Python Software Foundation."
 
 
@@ -18,6 +18,21 @@ Date: ''' + __date__ + '''
 
 @title
 CHANGE LOG:
+
+  Version 1.1.2:
+
+    Fixes a couple of additional bugs, one dealing with the misalignment of
+    variables and parameters in the backpropagation logic for the one-neuron
+    case, and the other with the example script "verify_with_torchnn.py" not
+    working on account of the previous changes to the module code.  Thanks to
+    all who discovered these bugs.
+
+  Version 1.1.1:
+
+    Includes a bug fix in the parser for the expressions that define a
+    multi-layer neural network.  The bug was causing the input nodes to be
+    replicated when parsing the expressions at each node in the second layer of
+    such a network.  Many thanks to the student who discovered the bug.
 
   Version 1.1.0:
 
@@ -770,8 +785,9 @@ class ComputationalGraphPrimer(object):
                    '''ComputationalGraphPrimer constructor can only be called with keyword arguments for 
                       the following keywords: expressions, output_vars, dataset_size, grad_delta,
                       learning_rate, display_loss_how_often, one_neuron_model, training_iterations, 
-                      batch_size, num_layers, layers_config, epochs, and debug''')
-        expressions = output_vars = dataset_size = grad_delta = display_loss_how_often = learning_rate = one_neuron_model = training_iterations = batch_size = num_layers = layers_config = epochs = debug  = None
+                      batch_size, num_layers, layers_config, epochs, for_verification_only and debug''')
+        expressions = output_vars = dataset_size = grad_delta = display_loss_how_often = learning_rate = None
+        one_neuron_model = training_iterations = batch_size = num_layers = layers_config = epochs = for_verification_only = debug  = None
         if 'one_neuron_model' in kwargs              :   one_neuron_model = kwargs.pop('one_neuron_model')
         if 'batch_size' in kwargs                    :   batch_size = kwargs.pop('batch_size')
         if 'num_layers' in kwargs                    :   num_layers = kwargs.pop('num_layers')
@@ -780,11 +796,11 @@ class ComputationalGraphPrimer(object):
         if 'output_vars' in kwargs                   :   output_vars = kwargs.pop('output_vars')
         if 'dataset_size' in kwargs                  :   dataset_size = kwargs.pop('dataset_size')
         if 'learning_rate' in kwargs                 :   learning_rate = kwargs.pop('learning_rate')
-        if 'training_iterations' in kwargs           :   training_iterations = \
-                                                                   kwargs.pop('training_iterations')
+        if 'training_iterations' in kwargs           :   training_iterations = kwargs.pop('training_iterations')
         if 'grad_delta' in kwargs                    :   grad_delta = kwargs.pop('grad_delta')
         if 'display_loss_how_often' in kwargs        :   display_loss_how_often = kwargs.pop('display_loss_how_often')
         if 'epochs' in kwargs                        :   epochs = kwargs.pop('epochs')
+        if 'for_verification_only' in kwargs         :   for_verification_only = kwargs.pop('for_verification_only')
         if 'debug' in kwargs                         :   debug = kwargs.pop('debug') 
         if len(kwargs) != 0: raise ValueError('''You have provided unrecognizable keyword args''')
         self.one_neuron_model =  True if one_neuron_model is not None else False
@@ -792,6 +808,7 @@ class ComputationalGraphPrimer(object):
             self.training_iterations = training_iterations
         self.batch_size  =  batch_size if batch_size else 4
         self.num_layers = num_layers 
+        self.for_verification_only = for_verification_only
         if layers_config:
             self.layers_config = layers_config
         if expressions:
@@ -819,13 +836,12 @@ class ComputationalGraphPrimer(object):
             self.debug = debug
         else:
             self.debug = 0
-        self.independent_vars = None
         self.gradient_of_loss = None
         self.gradients_for_learnable_params = None
         self.expressions_dict = {}
         self.LOSS = []                               ##  loss values for all iterations of training
         self.all_vars = set()
-        if (one_neuron_model is True) or (num_layers is not None):
+        if (one_neuron_model is True) or (num_layers is None) or (for_verification_only is True):
             self.independent_vars = []
             self.learnable_params = []
         else:
@@ -853,7 +869,7 @@ class ComputationalGraphPrimer(object):
         '''
         self.exp_objects = []
         self.var_to_int_labels = {}                  ## needed for DAG visualization with networkx
-        self.var_to_var_param = {}                   ## needed for DAG visualization with networkx
+        self.var_to_var_param = {}                   
         node_int_label = 0                           ## initialize int labels
         for exp in self.expressions:
             left,right = exp.split('=')
@@ -872,7 +888,7 @@ class ComputationalGraphPrimer(object):
                     self.var_to_int_labels[part] = node_int_label
                     node_int_label += 1
                 else:
-                    if self.one_neuron_model is True:
+                    if (self.one_neuron_model is True) or (self.for_verification_only is True):
                         self.learnable_params.append(part)
                     else:
                         self.learnable_params.add(part)
@@ -890,7 +906,7 @@ class ComputationalGraphPrimer(object):
             print("\n\nnode to int labels: ", self.var_to_int_labels)
         for var in self.all_vars:
             if var not in self.depends_on:              # that is, var is not a key in the depends_on dict
-                if self.one_neuron_model is True:
+                if (self.one_neuron_model is True) or (self.for_verification_only is True):
                     self.independent_vars.append(var)                
                 else:
                     self.independent_vars.add(var)
@@ -916,7 +932,7 @@ class ComputationalGraphPrimer(object):
         '''
         self.exp_objects = []
         self.var_to_int_labels = {}                  ## needed for DAG visualization with networkx
-        self.var_to_var_param = {}                   ## needed for DAG visualization with networkx
+        self.var_to_var_param = {}           
         node_int_label = 0                           ## initialize int labels
         self.layer_expressions = { i : [] for i in range(1,self.num_layers) }
         self.layer_exp_objects = { i : [] for i in range(1,self.num_layers) }
@@ -948,10 +964,7 @@ class ComputationalGraphPrimer(object):
                             self.var_to_int_labels[part] = node_int_label
                             node_int_label += 1
                     else:
-                        if (self.one_neuron_model is True) or (self.num_layers is not None):
-                            self.learnable_params.append(part)
-                        else:
-                            self.learnable_params.add(part)
+                        self.learnable_params.add(part)
                         right_params.append(part)
                 self.layer_vars[layer_index-1] = right_vars
                 self.layer_vars[layer_index].append(left)
@@ -962,21 +975,18 @@ class ComputationalGraphPrimer(object):
                 exp_obj = Exp(exp, right, left, right_vars, right_params)
                 self.layer_exp_objects[layer_index].append(exp_obj)
             if self.debug:
-                print("\n\nall variables: %s" % str(self.all_vars))
-                print("\n\nlearnable params: %s" % str(self.learnable_params))
-                print("\n\ndependencies: %s" % str(self.depends_on))
-                print("\n\nexpressions dict: %s" % str(self.expressions_dict))
-                print("\n\nvar_to_var_param dict: ", self.var_to_var_param)
-                print("\n\nnode to int labels: ", self.var_to_int_labels)
+                print("\n\n[layer index: %d] all variables: %s" % (layer_index, str(self.all_vars)))
+                print("\n\n[layer index: %d] learnable params: %s" % (layer_index, str(self.learnable_params)))
+                print("\n\n[layer index: %d] dependencies: %s" % (layer_index, str(self.depends_on)))
+                print("\n\n[layer index: %d] expressions dict: %s" % (layer_index, str(self.expressions_dict)))
+                print("\n\n[layer index: %d] var_to_var_param dict: %s" % (layer_index, str(self.var_to_var_param)))
+                print("\n\n[layer index: %d] node to int labels: %s" % (layer_index, str(self.var_to_int_labels)))
             for var in self.all_vars:
                 if var not in self.depends_on:              # that is, var is not a key in the depends_on dict
-                    if (self.one_neuron_model is True) or (self.num_layers is not None):
-                        self.independent_vars.append(var)                
-                    else:
-                        self.independent_vars.add(var)
+                    self.independent_vars.add(var)
             self.input_size = len(self.independent_vars)
             if self.debug:
-                print("\n\nindependent vars: %s" % str(self.independent_vars))
+                print("\n\n[layer index: %d] independent vars: %s" % (layer_index, str(self.independent_vars)))
             self.dependent_vars = [var for var in self.all_vars if var not in self.independent_vars]
             self.output_size = len(self.dependent_vars)
             self.leads_to = {var : set() for var in self.all_vars}
@@ -984,12 +994,11 @@ class ComputationalGraphPrimer(object):
                 for var in v:
                     self.leads_to[var].add(k)    
             if self.debug:
-                print("\n\nleads_to dictionary: %s" % str(self.leads_to))
-        print("\n\nself.layer_vars: ", self.layer_vars)
-        print("\n\nself.layer_params: ", self.layer_params)
-        print("\n\nself.layer_exp_objects: ", self.layer_exp_objects)
-        print("\n\n[FINAL] var_to_var_param dict: ", self.var_to_var_param)
-        print("\n\n[FINAL] node to int labels: ", self.var_to_int_labels)
+                print("\n\n[layer index: %d] leads_to dictionary: %s" % (layer_index, str(self.leads_to)))
+        print("\n\n[Final] independent vars: %s" % str(self.independent_vars))
+        print("\n\n[Final] self.layer_vars: ", self.layer_vars)
+        print("\n\n[Final] self.layer_params: ", self.layer_params)
+        print("\n\n[Final] self.layer_exp_objects: ", self.layer_exp_objects)
 
 
     def parse_general_dag_expressions(self):
@@ -1021,10 +1030,7 @@ class ComputationalGraphPrimer(object):
                         self.var_to_int_labels[part] = node_int_label
                         node_int_label += 1
                 else:
-                    if self.one_neuron_model is True:
-                        self.learnable_params.append(part)
-                    else:
-                        self.learnable_params.add(part)
+                    self.learnable_params.append(part)
                     right_params.append(part)
             self.var_to_int_labels[left] = node_int_label
             self.all_vars.add(left)
@@ -1041,10 +1047,7 @@ class ComputationalGraphPrimer(object):
             print("\n\nnode to int labels: ", self.var_to_int_labels)
         for var in self.all_vars:
             if var not in self.depends_on:              # that is, var is not a key in the depends_on dict
-                if self.one_neuron_model is True:
-                    self.independent_vars.append(var)                
-                else:
-                    self.independent_vars.add(var)
+                self.independent_vars.append(var)
         self.input_size = len(self.independent_vars)
         if self.debug:
             print("\n\nindependent vars: %s" % str(self.independent_vars))
@@ -1135,7 +1138,7 @@ class ComputationalGraphPrimer(object):
         for i in range(len(var_param_pairs)):
             source_var = list(var_param_pairs.keys())[i]
             edge_labels[ ( self.var_to_int_labels[source_var], out_node ) ] = r"$%s$" % var_param_pairs[source_var]
-        
+
         def multilayered_graph(*subset_sizes):
             '''
             Defines a multi-partite graph you need for a neural network
@@ -1148,7 +1151,7 @@ class ComputationalGraphPrimer(object):
             for layer1, layer2 in nx.utils.pairwise(layers):
                 G.add_edges_from(itertools.product(layer1, layer2))
             return G
-        
+
         G = multilayered_graph(*subset_sizes)
         color = [subset_color[data["layer"]] for v, data in G.nodes(data=True)]
         pos = nx.multipartite_layout(G, subset_key="layer")
@@ -1397,14 +1400,18 @@ class ComputationalGraphPrimer(object):
         See Slide 59 of my Week 3 slides for the math of back propagation for the One-Neuron network.
         """
         input_vars = self.independent_vars
+        input_vars_to_param_map = self.var_to_var_param[self.output_vars[0]]
+        param_to_vars_map = {param : var for var, param in input_vars_to_param_map.items()}
         vals_for_input_vars_dict =  dict(zip(input_vars, list(vals_for_input_vars)))
         vals_for_learnable_params = self.vals_for_learnable_params
         for i,param in enumerate(self.vals_for_learnable_params):
             ## Calculate the next step in the parameter hyperplane
-            step = self.learning_rate * y_error * vals_for_input_vars_dict[input_vars[i]] * deriv_sigmoid    
+#            step = self.learning_rate * y_error * vals_for_input_vars_dict[input_vars[i]] * deriv_sigmoid    
+            step = self.learning_rate * y_error * vals_for_input_vars_dict[param_to_vars_map[param]] * deriv_sigmoid    
             ## Update the learnable parameters
             self.vals_for_learnable_params[param] += step
         self.bias += self.learning_rate * y_error * deriv_sigmoid    ## Update the bias
+
     ######################################################################################################
 
 
