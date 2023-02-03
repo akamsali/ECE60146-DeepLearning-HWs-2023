@@ -4,6 +4,42 @@ import numpy as np
 import operator
 
 class myADAM(ComputationalGraphPrimer):
+    '''
+    @akamsali:
+    modified from the backprop_and_update_params_one_neuron_model method in the ComputationalGraphPrimer class
+    in the ComputationalGraphPrimer.py file.
+
+    The modification is to use the SGD+ algorithm to update the step size
+
+    from:
+
+    $p_{t+1} = p_t - \eta g_{t+1}$
+
+    to:
+
+    $m_{t+1} = \beta_1 * m_t + (1-\beta_1) * g_{t+1}$
+
+    $v_{t+1} = \beta_2 * v_t + (1-\beta_2) * g_{t+1}^2$
+
+    $p_{t+1} = p_t - \eta (\hat{m}_{t+1} / \sqrt{\hat{v}_{t+1}})$
+
+    $\hat{m}_{t+1} = m_{t}/(1 - \beta_1^t)$
+
+    $\hat{v}_{t+1} = v_{t}/(1 - \beta_2^t)$
+
+
+    where m and v are the first and second momentum parameters
+
+    \eta = learning rate
+
+    $g_{t+1}$ = gradient of the loss function with respect to the learnable parameters (input val * deriv_sigmoid)
+
+    $p_t$ = learnable parameters
+
+    $m_0$ = all 0's
+
+    $v_0$ = all 0's
+    '''
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -71,23 +107,6 @@ class myADAM(ComputationalGraphPrimer):
         self.v_bias = 0
 
         class DataLoader:
-            """
-            To understand the logic of the dataloader, it would help if you first understand how
-            the training dataset is created.  Search for the following function in this file:
-
-                             gen_training_data(self)
-
-            As you will see in the implementation code for this method, the training dataset
-            consists of a Python dict with two keys, 0 and 1, the former points to a list of
-            all Class 0 samples and the latter to a list of all Class 1 samples.  In each list,
-            the data samples are drawn from a multi-dimensional Gaussian distribution.  The two
-            classes have different means and variances.  The dimensionality of each data sample
-            is set by the number of nodes in the input layer of the neural network.
-
-            The data loader's job is to construct a batch of samples drawn randomly from the two
-            lists mentioned above.  And it mush also associate the class label with each sample
-            separately.
-            """
 
             def __init__(self, training_data, batch_size):
                 self.training_data = training_data
