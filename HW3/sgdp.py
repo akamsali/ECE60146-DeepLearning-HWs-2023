@@ -9,7 +9,7 @@ class SGDplus(ComputationalGraphPrimer):
         super().__init__(*args, **kwargs)
         # self.momentum = mu
 
-    def backprop_and_update_params(self, y_error, vals_for_input_vars, deriv_sigmoid):
+    def backprop_and_update_params_one_neuron(self, y_error, vals_for_input_vars, deriv_sigmoid):
         """
         @akamsali:
         modified from the backprop_and_update_params_one_neuron_model method in the ComputationalGraphPrimer class
@@ -50,7 +50,7 @@ class SGDplus(ComputationalGraphPrimer):
         )
         self.bias += self.v_bias
 
-    def train(self, training_data, mu=None):
+    def train_one_neuron(self, training_data, mu=None):
         """
         @akamsali: Taking Avi's code as is for training a one neuron model.  The only modification
         is to return the loss running record so that we can plot it later.
@@ -177,7 +177,7 @@ class SGDplus(ComputationalGraphPrimer):
                     [float(len(class_labels))] * len(class_labels),
                 )
             )
-            self.backprop_and_update_params(
+            self.backprop_and_update_params_one_neuron(
                 y_error_avg, data_tuple_avg, deriv_sigmoid_avg
             )  ## BACKPROP loss
         # plt.figure()

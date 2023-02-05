@@ -8,7 +8,7 @@ class SGDPlusMultiNeuron(ComputationalGraphPrimer):
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
 
-    def back_prop_modified(self, y_error, class_labels):
+    def backprop_and_update_params_multineuron(self, y_error, class_labels):
             # backproped prediction error:
             pred_err_backproped_at_layers = {i : [] for i in range(1,self.num_layers-1)}  
             pred_err_backproped_at_layers[self.num_layers-1] = [y_error]
@@ -60,7 +60,7 @@ class SGDPlusMultiNeuron(ComputationalGraphPrimer):
                 self.bias[back_layer_index-1] += self.v_bias[back_layer_index -1]
         ######################################################################################################
     # @akamsali: modified func call name and take in momentum value \mu
-    def train(self, training_data, mu=None):
+    def train_multineuron(self, training_data, mu=None):
 
 
         class DataLoader:
@@ -139,7 +139,7 @@ class SGDPlusMultiNeuron(ComputationalGraphPrimer):
             y_errors = list(map(operator.sub, class_labels, y_preds))
             y_error_avg = sum(y_errors) / float(len(class_labels))
             # @akamsali: change to modified backprop
-            self.back_prop_modified(y_error_avg, class_labels)      ## BACKPROP loss
+            self.backprop_and_update_params_multineuron(y_error_avg, class_labels)      ## BACKPROP loss
             
         return loss_running_record
 
