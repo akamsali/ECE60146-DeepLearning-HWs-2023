@@ -1,7 +1,7 @@
 from pycocotools.coco import COCO
-import skimage.io as io
-from skimage.transform import resize
-
+# import skimage.io as io
+# from skimage.transform import resize
+import cv2
 import os
 
 
@@ -64,10 +64,10 @@ class COCO_loader:
             val_path = os.path.join(path, 'val')
             
             for tf in train_list:
-                img = io.imread(os.path.join(coco_path, tf))
-                img = resize(img, (64,64))
-                io.imsave(os.path.join(train_path, tf), img)
+                img = cv2.imread(os.path.join(coco_path, tf))
+                img = cv2.resize(img, (64,64), cv2.INTER_AREA)
+                cv2.imwrite(os.path.join(train_path, tf), img)
             for vf in val_list:
-                img = io.imread(os.path.join(coco_path, vf))
-                img = resize(img, (64,64))
-                io.imsave(os.path.join(val_path, vf), img) 
+                img = cv2.imread(os.path.join(coco_path, vf))
+                img = cv2.resize(img, (64,64), cv2.INTER_AREA)
+                cv2.imwrite(os.path.join(val_path, vf), img) 
