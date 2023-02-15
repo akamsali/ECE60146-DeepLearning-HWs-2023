@@ -1,6 +1,5 @@
 from pycocotools.coco import COCO
-# import skimage.io as io
-# from skimage.transform import resize
+
 import cv2
 import os
 
@@ -33,7 +32,7 @@ class COCO_loader:
         img_dict = self.coco.loadImgs(ids=imgIds)
         train = [img_dict[i]['file_name'] for i in range(train_size)]
         val = [img_dict[i]['file_name'] for i in range(train_size, train_size+val_size)]
-
+        print(len(train), len(val))
         return train, val
     
     def save_images_to_folder(self, category, train_size=5, val_size=5,
