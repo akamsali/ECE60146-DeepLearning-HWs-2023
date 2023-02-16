@@ -15,7 +15,7 @@ from typing import Union
 
 
 def train(
-    net, train_dataloader: torch.utils.data.Dataloader, epochs=10, net_name="net_name"
+    net, train_dataloader, epochs=10, net_name="net_name"
 ) -> None:
     device = "cuda" if torch.cuda.is_available() == True else "cpu"
     net.train()
@@ -77,6 +77,6 @@ def validate_and_conf_matrix(net, val_dataset, categories, name="Net") -> None:
     plt.figure()
     sns.heatmap(cm, annot=cm, xticklabels=categories, yticklabels=categories, fmt="g")
     plt.title(f"Confusion matrix for {name}, accuracy={accuracy_score(t, p)}")
-    plt.xlabel("True labels")
-    plt.ylabel("Predicted labels")
+    plt.xlabel("Predicted labels")
+    plt.ylabel("True labels")
     plt.savefig(f"results/cm_{name}.png")
