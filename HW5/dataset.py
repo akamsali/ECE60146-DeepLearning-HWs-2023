@@ -37,7 +37,13 @@ class MyDataset(torch.utils.data.Dataset):
             split_list = list(
                 map(lambda x: x['file_name'], data)
             )
-            split_bboxes = list(map(lambda x: x['bboxes'][0], data))
+            # for x in data:
+            #     print(x['bboxes'])
+            split_bboxes = list(map(lambda x: torch.tensor(x['bboxes'][0], dtype=torch.float) , data))
+            # print(split_bboxes)
+            # split_bboxes = 
+            # print(bboxes)
+
             split_lables = [label] * len(split_list)
 
             self.file_list += split_list
@@ -55,5 +61,5 @@ class MyDataset(torch.utils.data.Dataset):
         img = self.transform(img)
         label = self.label_list[index]
         bbox = self.bbox_list[index]
-
+        # print(bbox)
         return img, label, bbox
