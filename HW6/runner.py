@@ -12,7 +12,8 @@ from tqdm import tqdm
 categories = ["bus", "cat", "pizza"]
 
 batch_size = 4
-train_data = MyDataset(categories=categories, split='train', manifest_path='./manifests', mac=True)
+#train_data = MyDataset(categories=categories, split='train', manifest_path='./manifests', mac=True)
+train_data = MyDataset(categories=categories, split='train', manifest_path='./manifests')
 
 train_loader = DataLoader(train_data, batch_size=batch_size, shuffle=True)
 
