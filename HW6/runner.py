@@ -12,7 +12,7 @@ from tqdm import tqdm
 categories = ["bus", "cat", "pizza"]
 
 batch_size = 4
-train_data = MyDataset(categories=categories, split='train', manifest_path='./manifests')
+train_data = MyDataset(categories=categories, split='train', manifest_path='./manifests', mac=True)
 
 train_loader = DataLoader(train_data, batch_size=batch_size, shuffle=True)
 
@@ -25,7 +25,7 @@ criterion1 = nn.BCELoss()                    # For the first element of the 8 el
 criterion2 = nn.MSELoss()                    # For the regression elements (indexed 2,3,4,5) of yolo vector   ## (4)
 criterion3 = nn.CrossEntropyLoss()           # For the last three elements of the 8 element yolo vector        ## (5)
 sigmoid = nn.Sigmoid()
-
+softmax = nn.Softmax(dim=1)
 # print("\n\nLearning Rate: ", self.rpg.learning_rate)
 optimizer = optim.Adam(ynet.parameters(), lr=1e-4)                 ## (6)
 epochs = 2
@@ -33,6 +33,7 @@ epochs = 2
 logger = open('./solutions/test.csv', 'a', newline="")
 loss_flag = 1e32
 ynet = ynet.to(device)
+
 for epoch in range(epochs):
     running_loss = 0
     for i, d in tqdm(enumerate(train_loader)):
@@ -53,35 +54,48 @@ for epoch in range(epochs):
         # present_obj = torch.where(true_yolo_aug[:, :, :, 0])#.unsqueeze(0)
         present_obj = torch.nonzero(true_yolo_aug[:, :, :, 0])#.unsqueeze(0)
 
+        pred_regression_box = out[present_obj[:, 0], present_obj[:, 1], present_obj[:, 2], 1:5]
+        true_regression_box = true_yolo_aug[present_obj[:, 0], present_obj[:, 1], present_obj[:, 2], 1:5]
+        # print(pred_regression_box.shape, true_regression_box.shape)
+
+        pred_labels = out[present_obj[:, 0], present_obj[:, 1], present_obj[:, 2], 5:-1]
+        true_labels = true_yolo_aug[present_obj[:, 0], present_obj[:, 1], present_obj[:, 2], 5:-1]
+        # print(pred_labels.shape, true_labels.shape)
+        
         # print(present_obj)
         #pred_objectness = torch.zeros((len(present_obj)))
         #true_objectness = torch.ones((len(present_obj)))
 
+        
+        # pred_regression_box = torch.zeros((len(present_obj), 4))
+        # true_regression_box = torch.zeros((len(present_obj), 4))
 
-        pred_regression_box = torch.zeros((len(present_obj), 4))
-        true_regression_box = torch.zeros((len(present_obj), 4))
+        # pred_labels = torch.zeros((len(present_obj), 3))
+        # true_labels = torch.zeros((len(present_obj), 3))
 
-        pred_labels = torch.zeros((len(present_obj), 3))
-        true_labels = torch.zeros((len(present_obj), 3))
 
-        for j, p in enumerate(present_obj):
-            # pred_objectness[i] = out[p[0], p[1], p[2], 0]
-            # print(p)
-            pred_regression_box[j] = out[p[0], p[1], p[2], 1:5]
-            true_regression_box[j] = true_yolo_aug[p[0], p[1], p[2], 1:5]
+        # for j, p in enumerate(present_obj):
+        #     # pred_objectness[i] = out[p[0], p[1], p[2], 0]
+        #     # print(p)
+        #     pred_regression_box[j] = out[p[0], p[1], p[2], 1:5]
+        #     true_regression_box[j] = true_yolo_aug[p[0], p[1], p[2], 1:5]
 
-            pred_labels[j] = out[p[0], p[1], p[2], 5:-1]
-            true_labels[j] = true_yolo_aug[p[0], p[1], p[2], 5:-1]
+        #     pred_labels[j] = out[p[0], p[1], p[2], 5:-1]
+        #     true_labels[j] = true_yolo_aug[p[0], p[1], p[2], 5:-1]
         #print(pred_labels, true_labels, t_l)
         #break
         loss_BCE = criterion1(sigmoid(out[:, :, : , 0]), true_yolo_aug[:, :, :, 0])
         # print(loss_BCE)
 
         loss_MSE = criterion2(pred_regression_box, true_regression_box)
+        
         # print(loss_MSE)
 
-        loss_CE = criterion3(pred_labels, true_labels)
+        # loss_CE = criterion3(softmax(pred_labels), true_labels)
+        # print(torch.argmax(true_labels, dim=1), pred_labels)
+        loss_CE = criterion3(pred_labels, torch.argmax(true_labels, dim=1))
         # print(loss_CE)
+        
 
         total_loss = loss_BCE + loss_MSE + loss_CE
         total_loss.backward()

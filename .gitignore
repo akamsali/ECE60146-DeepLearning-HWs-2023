@@ -154,3 +154,6 @@ sol2/
 .DS_Store
 
 .vscode/
+
+*.pt
+plotter/
