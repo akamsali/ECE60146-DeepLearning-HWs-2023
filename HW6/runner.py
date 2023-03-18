@@ -7,7 +7,7 @@ from torch.utils.data import DataLoader
 
 categories = ["bus", "cat", "pizza"]
 
-batch_size = 4
+batch_size = 8 
 # train_data = MyDataset(
 #     categories=categories, split="train", manifest_path="./manifests", mac=True
 # )
@@ -18,7 +18,7 @@ train_loader = DataLoader(train_data, batch_size=batch_size, shuffle=True)
 
 ynet = NetForYolo(depth=2)
 
-train(train_loader, ynet)
+train(train_loader, ynet, epochs=10, net_name='final_train')
 
 # val_data = MyDataset(
 #     categories=categories, split="val", manifest_path="./manifests", mac=True
