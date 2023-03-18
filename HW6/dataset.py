@@ -129,17 +129,18 @@ class MyDataset(torch.utils.data.Dataset):
         label = self.label_list[index]
         bboxes = self.bbox_list[index]
 
-        # anchor_box_indices, yolo_cell_indices, yolo_vectors, yolo_tensor = self.get_yolo_vectors(bboxes,
-                                                                                                #  class_idx=label)
+        if self.split == "train":
 
-        _, _, _, yolo_tensor = self.get_yolo_vectors(bboxes,class_idx=label)
-        
-        yolo_tensor_aug = torch.cat((yolo_tensor, 
-                                     torch.zeros((*yolo_tensor.shape[:-1], 1))), dim=-1)
+            _, _, _, yolo_tensor = self.get_yolo_vectors(bboxes,class_idx=label)
+            
+            yolo_tensor_aug = torch.cat((yolo_tensor, 
+                                        torch.zeros((*yolo_tensor.shape[:-1], 1))), dim=-1)
 
-        # print(bbox)
-        for i in range(yolo_tensor_aug.shape[0]):
-            for j in range(yolo_tensor_aug.shape[1]):
-                if yolo_tensor_aug[i, j, 0] == 0:
-                    yolo_tensor_aug[i, j, -1] == 1
-        return img, label, yolo_tensor_aug
+            # print(bbox)
+            for i in range(yolo_tensor_aug.shape[0]):
+                for j in range(yolo_tensor_aug.shape[1]):
+                    if yolo_tensor_aug[i, j, 0] == 0:
+                        yolo_tensor_aug[i, j, -1] == 1
+            return img, label, yolo_tensor_aug
+        else:
+            return img, label, bboxes
