@@ -89,9 +89,6 @@ class MyDataset(torch.utils.data.Dataset):
             # print(idx, cell_row_indx, cell_col_indx)
             cell_row_indx = min(max(0, cell_row_indx), num_cells_image_width-1)
             cell_col_indx = min(max(0, cell_col_indx), num_cells_image_height-1)
-            # print(idx, cell_row_indx, cell_col_indx)
-            # print(idx)
-            # final_bboxes.append((cell_row_indx, cell_col_indx, width_center_bb, height_center_bb))
 
             b_w, b_h = w/yolo_interval, h/yolo_interval
 
@@ -142,5 +139,5 @@ class MyDataset(torch.utils.data.Dataset):
                     if yolo_tensor_aug[i, j, 0] == 0:
                         yolo_tensor_aug[i, j, -1] == 1
             return img, label, yolo_tensor_aug
-        else:
+        elif self.split == "val":
             return img, label, bboxes
