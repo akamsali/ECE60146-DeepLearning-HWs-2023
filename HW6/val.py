@@ -43,27 +43,29 @@ def validation(val_loader, ynet, yolo_interval=32):
             out = ynet(inp.unsqueeze(0))
             out = out.view(-1, 64, 5, 9)
 
-        #     # get cells with top 5 highest values in the first element of the predicted yolo_vectors
+        #     # get cells sorted with the highest values in the first element of the predicted yolo_vectors
         #     # to achieve this, first we get the max value of anchor boxes for each cell
-        #     # then we sort the values in descending order and get the top 5 cells
+        #     # then we sort the values in descending order
             pred_vals = out[:, :, :, 0]
             pred_vals, _ = torch.max(pred_vals, dim=-1)
             sorted_cells = torch.argsort(pred_vals, descending=True, dim=-1)
 
-            top5preds = torch.zeros((out.shape[0], 64, 9))
+            # toppred_iter = torch.zeros((out.shape[0], 64, 9))
 
-            for i in range(out.shape[0]):
-                each_batch = out[i, sorted_cells[i]]
-                for j in range(each_batch.shape[0]):
-                    temp = each_batch[j, :, 0]
-                    args = torch.argmax(temp, dim=-1)
-                    top5preds[i, j] = each_batch[j, args]
+            # for i in range(out.shape[0]):
+            #     each_batch = out[i, sorted_cells[i]]
+            #     for j in range(each_batch.shape[0]):
+            #         temp = each_batch[j, :, 0]
+            #         args = torch.argmax(temp, dim=-1)
+            #         toppred_iter[i, j] = each_batch[j, args]
 
-            pred_classes = top5preds[:, :, 5:-1]
+            toppred = out[sorted_cells[:, 0], sorted_cells[:, 1], sorted_cells[:2]]
+            # print(toppred, toppred_iter)
+            pred_classes = toppred[:, :, 5:-1]
             pred_classes = nn.Softmax(dim=1)(pred_classes)
             pred_classes = torch.argmax(pred_classes, dim=-1)
 
-            pred_regression_vec = top5preds[:, :, 1:5]
+            pred_regression_vec = toppred[:, :, 1:5]
             del_x, del_y = pred_regression_vec[:, :, 0], pred_regression_vec[:, :, 1]
             h, w = pred_regression_vec[:, :, 2], pred_regression_vec[:, :, 3]
 

@@ -106,7 +106,7 @@ class MyDataset(torch.utils.data.Dataset):
             if 1.5 < AR <= 4.0:         anch_box_index = 3                                                     ## (48)
             if AR > 4.0:                anch_box_index = 4
             
-            yolo_vector = torch.FloatTensor([1, del_x, del_y, b_h, b_w, 0, 0, 0])
+            yolo_vector = torch.FloatTensor([1, del_x, del_y, b_w, b_h, 0, 0, 0])
             yolo_vector[5+class_idx] = 1
             yolo_cell_idx = cell_row_indx * num_cells_image_width  +  cell_col_indx
             
