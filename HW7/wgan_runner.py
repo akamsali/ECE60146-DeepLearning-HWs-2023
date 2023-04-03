@@ -7,7 +7,7 @@ import torchvision
 
 import pickle
 import csv
-
+from tqdm import tqdm
 
 def train_wgan(train_loader, 
                 noise_dim=100, 
@@ -43,28 +43,31 @@ def train_wgan(train_loader,
     loss_D_flag = 100000
 
     for epoch in range(epochs):
+        print(len(train_loader))
         data_iterator = iter(train_loader)
         i = 0
         n_critic = 5
         
         while i < len(train_loader):
-            
+            print(i)
             for param in netC.parameters():
                 param.requires_grad = True
             
             if gen_iterations < 25 or gen_iterations % 500 == 0:
                 n_critic = 100
             
-            ic = 0
-        
-            while ic < n_critic and i < len(train_loader):
-                ic += 1
+            print("entering loop: ", i, n_critic, gen_iterations)
+            # while ic < n_critic and i < len(train_loader):
+            for _ in tqdm(range(n_critic)):
+                if i >= len(train_loader):
+                    break
+
                 for p in netC.parameters():
                     p.data.clamp_(-clipping_thresh, clipping_thresh)
                 
                 netC.zero_grad()
                 real_images = data_iterator.next().to(device)
-                i += 1
+                
                 b_size = real_images.size(0)
 
                 critic_for_real = netC(real_images)
@@ -79,12 +82,15 @@ def train_wgan(train_loader,
                 critic_loss = critic_for_fake - critic_for_real
 
                 optimizerC.step()
+                i += 1
+
             
             # now we come to generator, for which we don't need to update critic
             # so we freeze the critic parameters
             for p in netC.parameters():
                 p.requires_grad = False
             # we need to update generator
+            # print("entering generator")
             netG.zero_grad()
             noise = torch.randn(b_size, noise_dim, 1, 1, device=device)
             fake = netG(noise)
@@ -95,37 +101,36 @@ def train_wgan(train_loader,
             # update generator
             optimizerG.step()
             gen_iterations += 1
-            if i % (n_critic*20) == 0:
+            
+            c_loss_val = critic_loss.data[0].item()
+            g_loss_val = gen_loss.data[0].item()
+            if i % 100 == 0:
                 save_vals = [epoch, epochs, i, len(train_loader), 
-                             critic_loss.data[0], gen_loss.data[0],
-                             wasserstein_distance.data[0]]
+                             c_loss_val, g_loss_val,
+                             wasserstein_distance.data[0].item()]
 
                 logger = open(f"./solutions/{name}.csv", "a", newline="")
                 with logger:
                     write = csv.writer(logger)
                     write.writerow(save_vals)
 
-                # if running_G_loss < loss_G_flag:
-                #     loss_G_flag = running_G_loss
-                #     torch.save(netG.state_dict(), "./solutions/gen_" + name + ".pt")
-                # if running_D_loss < loss_D_flag:
-                #     loss_D_flag = running_D_loss
-                #     torch.save(netD.state_dict(), "./solutions/dis_" + name + ".pt")
+                if g_loss_val < loss_G_flag:
+                    loss_G_flag = g_loss_val
+                    torch.save(netG.state_dict(), "./solutions/gen_" + name + ".pt")
+                if c_loss_val < loss_D_flag:
+                    loss_D_flag = c_loss_val
+                    torch.save(netC.state_dict(), "./solutions/critic_" + name + ".pt")
 
                 # running_D_loss = 0.0
                 # running_G_loss = 0.0
 
-            C_losses.append(critic_loss.data[0])
-            G_losses.append(gen_loss.data[0])
+            C_losses.append(critic_loss.data[0].item())
+            G_losses.append(g_loss_val)
             if (iters % 500 == 0) or ((epoch == epochs-1) and (i == len(train_loader)-1)):
                 with torch.no_grad():
                     fake = netG(fixed_noise).detach().cpu()
                 img_list.append(torchvision.utils.make_grid(fake, padding=2, normalize=True))
             iters += 1
-
-
-                
-
 
         
     with open(f"./solutions/{name}_C_loss.pkl", "wb") as logger:
@@ -144,7 +149,7 @@ from dataloader import MyDataset
 from torch.utils.data import DataLoader
 import torch
 
-data_path = '/home/akshita/Documents/data/pizzas'
+data_path = '/mnt/cloudNAS4/akshita/Documents/datasets/pizza'
 
 
 train_dataset = MyDataset(data_path)
