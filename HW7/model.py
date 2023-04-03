@@ -162,18 +162,25 @@ class CriticCG1(nn.Module):
         self.bn1  = nn.BatchNorm2d(128)
         self.bn2  = nn.BatchNorm2d(256)
         self.bn3  = nn.BatchNorm2d(512)
-        self.final = nn.Linear(512, 1)
+        self.final = nn.Linear(64, 1)
     def forward(self, x):              
         x = torch.nn.functional.leaky_relu(self.conv_in(x), negative_slope=0.2, inplace=True)
+        # print("CriticCG1:  x.shape = ", x.shape)
         x = self.bn1(self.conv_in2(x))
+        # print("CriticCG1:  x.shape = ", x.shape)
         x = torch.nn.functional.leaky_relu(x, negative_slope=0.2, inplace=True)
         x = self.bn2(self.conv_in3(x))
+        # print("CriticCG1:  x.shape = ", x.shape)
         x = torch.nn.functional.leaky_relu(x, negative_slope=0.2, inplace=True)
         x = self.bn3(self.conv_in4(x))
+        # print("CriticCG1:  x.shape = ", x.shape)
         x = torch.nn.functional.leaky_relu(x, negative_slope=0.2, inplace=True)
         x = self.conv_in5(x)
+        # print("CriticCG1:  x.shape = ", x.shape)
         x = x.view(-1)
+        # print("CriticCG1:  x.shape = ", x.shape)
         x = self.final(x)
+        # print("CriticCG1:  x.shape = ", x.shape)
         # The following will cause a single value to be returned for the entire batch. This is
         # required by the Expectation operator E() in Equation (6) in the doc section of this 
         # file (See the beginning of this file).  For the P distribution in that equation, we 
