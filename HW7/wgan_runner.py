@@ -49,16 +49,15 @@ def train_wgan(train_loader,
         n_critic = 5
         
         while i < len(train_loader):
-            print(i)
             for param in netC.parameters():
                 param.requires_grad = True
             
             if gen_iterations < 25 or gen_iterations % 500 == 0:
                 n_critic = 100
-            
+             
             print("entering loop: ", i, n_critic, gen_iterations)
             # while ic < n_critic and i < len(train_loader):
-            for _ in tqdm(range(n_critic)):
+            for _ in range(n_critic):
                 if i >= len(train_loader):
                     break
 
@@ -66,8 +65,8 @@ def train_wgan(train_loader,
                     p.data.clamp_(-clipping_thresh, clipping_thresh)
                 
                 netC.zero_grad()
-                real_images = data_iterator.next().to(device)
-                
+                #real_images = data_iterator.next().to(device)
+                real_images = next(data_iterator).to(device)
                 b_size = real_images.size(0)
 
                 critic_for_real = netC(real_images)
@@ -104,7 +103,7 @@ def train_wgan(train_loader,
             
             c_loss_val = critic_loss.data[0].item()
             g_loss_val = gen_loss.data[0].item()
-            if i % 100 == 0:
+            if i % 200 == 0:
                 save_vals = [epoch, epochs, i, len(train_loader), 
                              c_loss_val, g_loss_val,
                              wasserstein_distance.data[0].item()]
@@ -151,9 +150,9 @@ import torch
 
 data_path = '/mnt/cloudNAS4/akshita/Documents/datasets/pizza'
 
-
+batch_size = 8 
 train_dataset = MyDataset(data_path)
-train_loader = DataLoader(train_dataset, batch_size=4, shuffle=True)
+train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 print(device)
-train_wgan(train_loader, epochs=1, name="wgan", device=device)
+train_wgan(train_loader, epochs=10, name="wgan", device=device, batch_size=batch_size)

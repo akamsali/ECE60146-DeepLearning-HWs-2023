@@ -162,7 +162,7 @@ class CriticCG1(nn.Module):
         self.bn1  = nn.BatchNorm2d(128)
         self.bn2  = nn.BatchNorm2d(256)
         self.bn3  = nn.BatchNorm2d(512)
-        self.final = nn.Linear(64, 1)
+        self.final = nn.Linear(16, 1)
     def forward(self, x):              
         x = torch.nn.functional.leaky_relu(self.conv_in(x), negative_slope=0.2, inplace=True)
         # print("CriticCG1:  x.shape = ", x.shape)
@@ -176,8 +176,7 @@ class CriticCG1(nn.Module):
         # print("CriticCG1:  x.shape = ", x.shape)
         x = torch.nn.functional.leaky_relu(x, negative_slope=0.2, inplace=True)
         x = self.conv_in5(x)
-        # print("CriticCG1:  x.shape = ", x.shape)
-        x = x.view(-1)
+        x = x.view(-1, 16)
         # print("CriticCG1:  x.shape = ", x.shape)
         x = self.final(x)
         # print("CriticCG1:  x.shape = ", x.shape)
