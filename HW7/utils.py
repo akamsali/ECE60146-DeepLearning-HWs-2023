@@ -25,7 +25,7 @@ def generate_fake_images(model_path, device, num_imgs=1000):
     generator.load_state_dict(torch.load(model_path, map_location=device))
     generator.eval()
     # for i in range(1000):
-    noise = torch.randn(num_imgs, 100, 1, 1, device=device)
+    noise = torch.randn(num_imgs, 100, 1, 1, device=device, dtype=torch.float)
     fake = generator(noise)
     fake = fake.detach().cpu().numpy()
     fake = ((fake + 1) * 127.5).astype(np.uint8)

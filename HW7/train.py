@@ -121,6 +121,26 @@ def train_gan(train_loader,
     logger.close()
 
 
+def calc_gradient_penalty(netC, real_data, fake_data, LAMBDA=10):
+    """
+    Implementation by Marvin Cao: https://github.com/caogang/wgan-gp
+    Marvin Cao's code is a PyTorch version of the Tensorflow based implementation provided by
+    the authors of the paper "Improved Training of Wasserstein GANs" by Gulrajani, Ahmed, 
+    Arjovsky, Dumouli,  and Courville.
+    """
+    # BATCH_SIZE = self.dlstudio.batch_size
+    # LAMBDA = self.adversarial.LAMBDA
+    epsilon = torch.rand(1).cuda()
+    interpolates = epsilon * real_data + ((1 - epsilon) * fake_data)
+    interpolates = interpolates.requires_grad_(True).cuda() 
+    critic_interpolates = netC(interpolates)
+    gradients = torch.autograd.grad(outputs=critic_interpolates, inputs=interpolates,
+                                grad_outputs=torch.ones(critic_interpolates.size()).cuda(), 
+                                create_graph=True, retain_graph=True, only_inputs=True)[0]
+    gradient_penalty = ((gradients.norm(2, dim=1) - 1) ** 2).mean() * LAMBDA
+    return gradient_penalty
+
+
 def train_wgan(train_loader, 
                 noise_dim=100, 
                 batch_size=4, 
@@ -128,7 +148,7 @@ def train_wgan(train_loader,
                 lr=0.0002, 
                 betas=(0.5, 0.999), 
                 epochs=1,
-                clipping_thresh = 0.01,
+                LAMBDA = 10,
                 name="wgan"):
 
     netC = model.CriticCG1().to(device)
@@ -159,26 +179,25 @@ def train_wgan(train_loader,
         data_iterator = iter(train_loader)
         i = 0
         n_critic = 5
-        
         while i < len(train_loader):
             for param in netC.parameters():
                 param.requires_grad = True
-            
-            if gen_iterations < 25 or gen_iterations % 500 == 0:
-                n_critic = 100
              
-            print("entering loop: ", i, n_critic, gen_iterations)
+            ic = 0
+            # print("entering loop: ", i, n_critic, gen_iterations)
             # while ic < n_critic and i < len(train_loader):
-            for _ in range(n_critic):
-                if i >= len(train_loader):
-                    break
+            # for _ in range(n_critic):
+            while ic < n_critic and i < len(train_loader):
+                # if i >= len(train_loader):
+                    # break
 
-                for p in netC.parameters():
-                    p.data.clamp_(-clipping_thresh, clipping_thresh)
+                # for p in netC.parameters():
+                    # p.data.clamp_(-clipping_thresh, clipping_thresh)
                 
                 netC.zero_grad()
                 #real_images = data_iterator.next().to(device)
                 real_images = next(data_iterator).to(device)
+                i += 1
                 b_size = real_images.size(0)
 
                 critic_for_real = netC(real_images)
@@ -186,14 +205,15 @@ def train_wgan(train_loader,
 
                 noise = torch.randn(b_size, noise_dim, 1, 1, device=device)
                 fake = netG(noise)
-                critic_for_fake = netC(fake)
+                critic_for_fake = netC(fake.detach())
                 critic_for_fake.backward(one)
 
+                gradient_penalty = calc_gradient_penalty(netC, real_images, fake, LAMBDA)
+                gradient_penalty.backward()
+                critic_loss = critic_for_fake - critic_for_real + gradient_penalty
                 wasserstein_distance = critic_for_real - critic_for_fake
-                critic_loss = critic_for_fake - critic_for_real
 
                 optimizerC.step()
-                i += 1
 
             
             # now we come to generator, for which we don't need to update critic
