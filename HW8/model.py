@@ -128,3 +128,45 @@ class RNN_custom(nn.Module):
         # feedforward layer
         output = self.linear(outs[-1].squeeze(0))
         return output
+    
+
+class UNI_GRU(nn.Module):
+    def __init__(self, input_size, hidden_size, output_size, num_layers=1) -> None:
+        super(UNI_GRU, self).__init__()
+        self.input_size = input_size
+        self.hidden_size = hidden_size
+        self.num_layers = num_layers
+        self.gru = nn.GRU(input_size, hidden_size, num_layers)
+        self.fc = nn.Linear(hidden_size, output_size)
+        self.relu = nn.ReLU()
+        self.logsoftmax = nn.LogSoftmax(dim=1)
+    
+    def forward(self, x):
+        h = torch.zeros(self.num_layers, x.size(1), self.hidden_size).requires_grad_()
+        # Forward propagation by passing in the input and hidden state into the model
+        out, h = self.gru(x, h.detach())
+        print(out.shape)
+        out = self.fc(self.relu(out[:, -1]))
+        out = self.logsoftmax(out)
+        return out, h
+    
+
+class BI_GRU(nn.Module):
+    def __init__(self, input_size, hidden_size, output_size, num_layers=1) -> None:
+        super().__init__()
+        self.input_size = input_size 
+        self.hidden_size = hidden_size
+        self.num_layers = num_layers
+        self.gru = nn.GRU(input_size, hidden_size, num_layers, bidirectional=True)
+        self.fc = nn.Linear(hidden_size*2, output_size)
+        self.relu = nn.ReLU()
+        self.logsoftmax = nn.LogSoftmax(dim=1)
+
+    def forward(self, x):
+        h = torch.zeros(2*self.num_layers, x.size(1), self.hidden_size).requires_grad_()
+        print(h.shape)
+        out, h = self.gru(x,h)
+        print(out.shape, out[:, -1].shape)
+        out = self.fc(self.relu(out[:, -1]))
+        out = self.logsoftmax(out)
+        return out, h
