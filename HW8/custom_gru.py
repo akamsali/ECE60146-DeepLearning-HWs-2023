@@ -112,9 +112,14 @@ class RNN_custom(nn.Module):
         batch_size, seq_len, _ = input.shape
 
         if hx is None:
-            h0 = Variable(torch.zeros(self.num_layers,
-                                      batch_size,
-                                      self.hidden_size))
+            if torch.cuda.is_available():
+                h0 = Variable(torch.zeros(self.num_layers,
+                                        batch_size,
+                                        self.hidden_size).cuda())
+            else:
+                h0 = Variable(torch.zeros(self.num_layers,
+                                        batch_size,
+                                        self.hidden_size))
         else:
             h0 = hx
         
@@ -175,9 +180,7 @@ def train_with_my_gru(net, name, device):
     net = net.to(device)
     criterion = nn.NLLLoss()
     optimizer = optim.Adam(net.parameters(), lr = dls.learning_rate, betas=(dls.momentum, 0.999))
-    training_loss_tally = list()
     softmax = nn.Softmax(dim=0)
-    loss_flag = 1e32
     for epoch in range(dls.epochs):
         running_loss = 0.0
         for i, data in enumerate(text_cl.train_dataloader):
@@ -197,17 +200,16 @@ def train_with_my_gru(net, name, device):
 
             running_loss += loss.item()
             
-            if i % 10 == 9:
-                row = [epoch, i, running_loss / 10]
+            if i % 100 == 99:
+                row = [epoch, i, running_loss / 100]
                 with open(f'./solutions/{name}_training_log.csv', 'a') as csvFile:
                     writer = csv.writer(csvFile)
                     writer.writerow(row)
-                if running_loss < loss_flag:
-                    loss_flag = running_loss
-                    torch.save(net.state_dict(), f'./solutions/{name}_best_model.pt')
                     
                 running_loss = 0.0
+    
+    torch.save(net.state_dict(), f'./solutions/{name}_best_model.pt')
     # return training_loss_tally
 
-net = RNN_custom(300, 512, 2, True, 2)
+net = RNN_custom(300, 512, 1, True, 2)
 train_with_my_gru(net, 'my_gru', device)
