@@ -146,7 +146,7 @@ wandb/
 # dataset2 and solutions
 Dataset1/
 Dataset2/
-# solutions/
+solutions/
 sol1/
 sol2/
 

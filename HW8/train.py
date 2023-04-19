@@ -57,13 +57,12 @@ class Train:
         
         return text_cl
 
-    def train(self, net, name, data_size=400, lr=1e-5, momentum=0.9, epochs=1):
+    def train_mygru(self, net, name, data_size=400, lr=1e-5, momentum=0.9, epochs=1):
         text_cl = self.get_dataloaders(data_size)
         print("Done loading data")
         net = net.to(self.device)
         criterion = nn.NLLLoss()
         optimizer = optim.Adam(net.parameters(), lr = lr, betas=(momentum, 0.999))
-        training_loss_tally = list()
         softmax = nn.Softmax(dim=0)
         loss_flag = 1e32
         print("Starting training")

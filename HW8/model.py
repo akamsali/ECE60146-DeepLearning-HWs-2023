@@ -2,7 +2,6 @@ import numpy as np
 
 import torch
 import torch.nn as nn
-import torch.autograd as Variable
 
 
 class MyGRU(nn.Module):
@@ -20,12 +19,12 @@ class MyGRU(nn.Module):
         self.input_size = input_size
         self.hidden_size = hidden_size
         self.bias = bias
-
+        # Repeat the same linear layer 3 times for the reset, update and new gates
+        # The input to the linear layer is the input vector x_t
         self.x2h = nn.Linear(input_size, 3 * hidden_size, bias=bias)
+        # The input to the linear layer is the hidden state vector h_t
         self.h2h = nn.Linear(hidden_size, 3 * hidden_size, bias=bias)
-
         self.reset_parameters()
-
 
     def reset_parameters(self):
         # Initialize all weights uniformly in the range [-1/sqrt(n), 1/sqrt(n)]
@@ -45,17 +44,16 @@ class MyGRU(nn.Module):
         """
         
         if hx is None:
-            hx = Variable(input.new_zeros(input.size(0), self.hidden_size))
+            hx = torch.zeros(input.size(0), self.hidden_size)
 
         # Compute x_t and h_t
         x_t = self.x2h(input)
         h_t = self.h2h(hx)
 
         # we split the output of the linear layers into 3 parts
-        # each of size hidden_size
+        # each of size hidden_size, each split is for a gate (reset, update, new)
         x_reset, x_upd, x_new = x_t.chunk(3, 1)
         h_reset, h_upd, h_new = h_t.chunk(3, 1)
-
         # compute the reset, update and new gates
         reset_gate = torch.sigmoid(x_reset + h_reset)
         update_gate = torch.sigmoid(x_upd + h_upd)
@@ -104,9 +102,15 @@ class RNN_custom(nn.Module):
         batch_size, seq_len, _ = input.shape
 
         if hx is None:
-            h0 = Variable(torch.zeros(self.num_layers,
-                                      batch_size,
-                                      self.hidden_size))
+            if torch.cuda.is_available():
+                h0 = torch.zeros(self.num_layers,
+                                          batch_size,
+                                          self.hidden_size).cuda().requires_grad_()
+            else:
+
+                h0 = torch.zeros(self.num_layers,
+                                          batch_size,
+                                          self.hidden_size).requires_grad_()
         else:
             h0 = hx
         
@@ -139,13 +143,13 @@ class UNI_GRU(nn.Module):
         self.gru = nn.GRU(input_size, hidden_size, num_layers)
         self.fc = nn.Linear(hidden_size, output_size)
         self.relu = nn.ReLU()
-        self.logsoftmax = nn.LogSoftmax(dim=1)
+        self.logsoftmax = nn.LogSoftmax()
     
     def forward(self, x):
-        h = torch.zeros(self.num_layers, x.size(1), self.hidden_size).requires_grad_()
+        h = torch.zeros(self.num_layers, x.size(1), self.hidden_size).cuda().requires_grad_()
         # Forward propagation by passing in the input and hidden state into the model
         out, h = self.gru(x, h.detach())
-        print(out.shape)
+        # print(out.shape)
         out = self.fc(self.relu(out[:, -1]))
         out = self.logsoftmax(out)
         return out, h
@@ -160,11 +164,11 @@ class BI_GRU(nn.Module):
         self.gru = nn.GRU(input_size, hidden_size, num_layers, bidirectional=True)
         self.fc = nn.Linear(hidden_size*2, output_size)
         self.relu = nn.ReLU()
-        self.logsoftmax = nn.LogSoftmax(dim=1)
+        self.logsoftmax = nn.LogSoftmax()
 
     def forward(self, x):
-        h = torch.zeros(2*self.num_layers, x.size(1), self.hidden_size).requires_grad_()
-        print(h.shape)
+        h = torch.zeros(2*self.num_layers, x.size(1), self.hidden_size).cuda().requires_grad_()
+        # print(h.shape)
         out, h = self.gru(x,h)
         print(out.shape, out[:, -1].shape)
         out = self.fc(self.relu(out[:, -1]))

@@ -58,7 +58,7 @@ class UNI_GRU(nn.Module):
         self.logsoftmax = nn.LogSoftmax()
     
     def forward(self, x):
-        h = torch.zeros(self.num_layers, x.size(1), self.hidden_size).requires_grad_()
+        h = torch.zeros(self.num_layers, x.size(1), self.hidden_size).requires_grad_().cuda()
         # Forward propagation by passing in the input and hidden state into the model
         out, h = self.gru(x, h.detach())
         # print(out.shape)
@@ -79,7 +79,7 @@ class BI_GRU(nn.Module):
         self.logsoftmax = nn.LogSoftmax()
 
     def forward(self, x):
-        h = torch.zeros(2*self.num_layers, x.size(1), self.hidden_size).requires_grad_()
+        h = torch.zeros(2*self.num_layers, x.size(1), self.hidden_size).requires_grad_().cuda()
         # print(h.shape)
         out, h = self.gru(x,h)
         print(out.shape, out[:, -1].shape)
