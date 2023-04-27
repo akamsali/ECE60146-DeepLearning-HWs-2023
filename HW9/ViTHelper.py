@@ -14,7 +14,7 @@ class MasterEncoder(nn.Module):
         self, max_seq_length, embedding_size, how_many_basic_encoders, num_atten_heads
     ):
         super().__init__()
-        print("creating model...")
+        # print("creating model...")
         self.max_seq_length = max_seq_length
         self.basic_encoder_arr = nn.ModuleList(
             [
@@ -33,7 +33,7 @@ class MasterEncoder(nn.Module):
 class BasicEncoder(nn.Module):
     def __init__(self, max_seq_length, embedding_size, num_atten_heads):
         super().__init__()
-        print("creating basic encoder...")
+        # print("creating basic encoder...")
         self.max_seq_length = max_seq_length
         self.embedding_size = embedding_size
         self.qkv_size = self.embedding_size // num_atten_heads
@@ -77,7 +77,7 @@ class BasicEncoder(nn.Module):
 class SelfAttention(nn.Module):
     def __init__(self, max_seq_length, embedding_size, num_atten_heads):
         super().__init__()
-        print("creating self attention layer...")
+        # print("creating self attention layer...")
         self.max_seq_length = max_seq_length
         self.embedding_size = embedding_size
         self.num_atten_heads = num_atten_heads
