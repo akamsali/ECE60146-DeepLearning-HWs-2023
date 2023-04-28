@@ -18,7 +18,7 @@ def train(net, train_loader, epochs=1, name="test"):
     net = net.to(device)
     net.train()
     criterion = nn.CrossEntropyLoss()
-    optimizer = torch.optim.Adam(net.parameters(), lr=0.001)
+    optimizer = torch.optim.Adam(net.parameters(), lr=1e-3, betas=(0.9, 0.99))
     for epoch in range(epochs):
         running_loss = 0.0
         for i, (images, labels) in enumerate(train_loader):
@@ -38,6 +38,7 @@ def train(net, train_loader, epochs=1, name="test"):
                 with open(name + "_train.csv", "a") as f:
                     writer = csv.writer(f)
                     writer.writerow(row_info)
+                running_loss = 0
 
         torch.save(net.state_dict(), name + "_epoch_" + str(epoch + 1) + ".pt")
         print("Finished Training Epoch {}".format(epoch + 1))
