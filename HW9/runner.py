@@ -10,11 +10,11 @@ from torch.utils.data import DataLoader
 img_size = 64
 patch_size = 16
 num_classes = 5
-embedding_size = 128
+embedding_size = 256
 max_seq_length = (img_size // patch_size) ** 2 + 1
-num_encoder_blocks = 3
-num_atten_heads = 4
-epochs = 5
+num_encoder_blocks = 4
+num_atten_heads = 8
+epochs = 10 
 
 vit_embeddings = ViT(
     img_size=img_size,
@@ -31,8 +31,8 @@ vit_embeddings = ViT(
 root = "/mnt/cloudNAS4/akshita/Documents/datasets/coco_custom"
 categories = ["airplane", "bus", "cat", "dog", "pizza"]
 train_dataset = MyDataset(root=root, categories=categories, split="train")
-name = 'b16_lr1e3'
-batch_size = 16 
+name = 'b8_es256_enc_4_att_8'
+batch_size = 8 
 train_loader = DataLoader(
     train_dataset, batch_size=batch_size, shuffle=True, num_workers=4
 )
