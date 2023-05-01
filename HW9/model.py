@@ -1,8 +1,10 @@
 from ViTHelper import MasterEncoder
+from ViTHelper_einops import MasterEncoder_einops
 
-import torch 
+import torch
 import torch.nn as nn
 from einops import rearrange
+
 
 class ViT(nn.Module):
     def __init__(
@@ -14,6 +16,7 @@ class ViT(nn.Module):
         num_heads,
         num_encoders,
         max_seq_length,
+        einops_usage=False,
     ):
         super().__init__()
         self.img_size = img_size
@@ -29,13 +32,21 @@ class ViT(nn.Module):
             torch.zeros(1, self.num_patches + 1, embedding_size)
         )
         self.cls_token = nn.Parameter(torch.zeros(1, 1, embedding_size))
+        if not einops_usage:
+            self.encoder = MasterEncoder(
+                max_seq_length=max_seq_length,
+                embedding_size=embedding_size,
+                how_many_basic_encoders=num_encoders,
+                num_atten_heads=num_heads,
+            )
+        else:
+            self.encoder = MasterEncoder_einops(
+                max_seq_length=max_seq_length,
+                embedding_size=embedding_size,
+                how_many_basic_encoders=num_encoders,
+                num_atten_heads=num_heads,
+            )
 
-        self.encoder = MasterEncoder(
-            max_seq_length=max_seq_length,
-            embedding_size=embedding_size,
-            how_many_basic_encoders=num_encoders,
-            num_atten_heads=num_heads,
-        )
         self.mlp_head = nn.Linear(embedding_size, num_classes)
 
     def forward(self, x):
